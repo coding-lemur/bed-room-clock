@@ -18,7 +18,7 @@ Show time
 
 ## Sketch
 
-later...
+![sketch](/docs/beed-room-clock%20Sketch_bb.png)
 
 ## Wiring
 
