@@ -4,22 +4,26 @@
 #include <WiFiSettings.h>
 #include <ArduinoOTA.h>
 #include <Ultrasonic.h>
-#include <U8g2lib.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_I2CDevice.h>
 #include <DHTesp.h>
 
+#include "config.h"
+
 Ultrasonic ultrasonic1(GPIO_NUM_5, GPIO_NUM_18);
-U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 DHTesp dht;
 
 void pre(void)
 {
-  u8g2.setFont(u8g2_font_squirrel_tu);
+  /*u8g2.setFont(u8g2_font_squirrel_tu);
   u8g2.setFontDirection(0);
   // u8g2.clear();
   u8g2.clearBuffer();
 
   u8g2.print("U8g2 Library");
-  u8g2.setCursor(0, 1);
+  u8g2.setCursor(0, 1);*/
 }
 
 // Start ArduinoOTA via WiFiSettings with the same hostname and password
@@ -30,6 +34,20 @@ void setup_ota()
   ArduinoOTA.begin();
 }
 
+void SetupDisplay()
+{
+  if (!display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS))
+  {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;)
+      ; // Don't proceed, loop forever
+  }
+
+  delay(1000);
+
+  display.clearDisplay();
+}
+
 void setup()
 {
   Serial.begin(9600);
@@ -38,9 +56,7 @@ void setup()
 
   dht.setup(GPIO_NUM_4, DHTesp::DHT22);
 
-  u8g2.begin();
-  // u8g2.setFlipMode(1);
-  u8g2.enableUTF8Print();
+  SetupDisplay();
 
   WiFiSettings.secure = true;
   WiFiSettings.hostname = "bedroom-clock-"; // will auto add device ID
@@ -83,17 +99,6 @@ void loop()
 
   float temperature = dht.getTemperature();
   // float humidity = dht.getHumidity();
-
-  u8g2.print("github.com/");
-  // u8g2.setCursor(0, 2);
-
-  u8g2.setCursor(10, 2);
-  u8g2.print(distance);
-
-  u8g2.setCursor(12, 2);
-  u8g2.print(temperature);
-
-  u8g2.sendBuffer();
 
   delay(1000);
 }
