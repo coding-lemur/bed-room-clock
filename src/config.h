@@ -3,4 +3,4 @@
 #define DISPLAY_ADDRESS 0x3C // I2C address
 //#define READ_SENSOR_INTERVAL 60000 // in ms
 //#define MQTT_UPDATE_INTERVAL 45000 // in ms
-#define PASSWORD "beeedroom"
+#define PASSWORD "waaatering"

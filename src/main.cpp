@@ -24,6 +24,11 @@ const int daylightOffset_sec = 3600;
 bool isPortalActive = false;
 unsigned long lastDisplayUpdate = 0;
 
+void setupDht()
+{
+  dht.setup(GPIO_NUM_4, DHTesp::DHT22);
+}
+
 void setupNtp()
 {
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -59,18 +64,8 @@ void setupDisplay()
   display.display();
 }
 
-void setup()
+void setupWifiSettings()
 {
-  Serial.begin(115200);
-  Wire.begin();
-
-  SPIFFS.begin(true); // Will format on the first run after failing to mount
-  SPIFFS.format();    // TODO reset config on connection MQTT fail
-
-  dht.setup(GPIO_NUM_4, DHTesp::DHT22);
-
-  setupDisplay();
-
   WiFiSettings.secure = true;
   WiFiSettings.hostname = "bedroom-"; // will auto add device ID
   WiFiSettings.password = PASSWORD;
@@ -93,19 +88,25 @@ void setup()
     ESP.restart();
   };
 
-  if (!isPortalActive)
-  {
-    // Use stored credentials to connect to your WiFi access point.
-    // If no credentials are stored or if the access point is out of reach,
-    // an access point will be started with a captive portal to configure WiFi.
-    WiFiSettings.connect(true, 30);
-  }
+  // Use stored credentials to connect to your WiFi access point.
+  // If no credentials are stored or if the access point is out of reach,
+  // an access point will be started with a captive portal to configure WiFi.
+  WiFiSettings.connect(true, 30);
+}
 
-  // Serial.print("Password: ");
-  // Serial.println(WiFiSettings.password);
+void setup()
+{
+  Serial.begin(115200);
+  Wire.begin();
 
-  setupOta(); // If you also want the OTA during regular execution
+  SPIFFS.begin(true); // Will format on the first run after failing to mount
+  // SPIFFS.format();    // TODO reset config on connection MQTT fail
+
+  setupWifiSettings();
+  setupDisplay();
+  setupOta();
   setupNtp();
+  setupDht();
 }
 
 void loop()
@@ -126,7 +127,7 @@ void loop()
 
     if (millis() - lastDisplayUpdate >= 500)
     {
-      Serial.println('Miau 5');
+      Serial.println("Miau 5");
 
       float temperature = dht.getTemperature();
       // float humidity = dht.getHumidity();
