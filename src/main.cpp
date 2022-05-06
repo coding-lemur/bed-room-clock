@@ -8,6 +8,7 @@
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_I2CDevice.h>
 #include <DHTesp.h>
+#include <time.h>
 
 #include "config.h"
 
@@ -15,26 +16,28 @@ Ultrasonic ultrasonic1(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 DHTesp dht;
 
-void pre(void)
-{
-  /*u8g2.setFont(u8g2_font_squirrel_tu);
-  u8g2.setFontDirection(0);
-  // u8g2.clear();
-  u8g2.clearBuffer();
+// TODO move to config
+const char *ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = 3600;
+const int daylightOffset_sec = 3600;
 
-  u8g2.print("U8g2 Library");
-  u8g2.setCursor(0, 1);*/
+bool isPortalActive = false;
+unsigned long lastDisplayUpdate = 0;
+
+void setupNtp()
+{
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 }
 
 // Start ArduinoOTA via WiFiSettings with the same hostname and password
-void setup_ota()
+void setupOta()
 {
   ArduinoOTA.setHostname(WiFiSettings.hostname.c_str());
   ArduinoOTA.setPassword(WiFiSettings.password.c_str());
   ArduinoOTA.begin();
 }
 
-void SetupDisplay()
+void setupDisplay()
 {
   if (!display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS))
   {
@@ -46,59 +49,110 @@ void SetupDisplay()
   delay(1000);
 
   display.clearDisplay();
+
+  display.setTextColor(WHITE);
+  display.setTextSize(2);
+
+  display.setCursor(0, 0);
+  display.print(">> bedroom clock <<");
+
+  display.display();
 }
 
 void setup()
 {
-  Serial.begin(9600);
-  SPIFFS.begin(true); // Will format on the first run after failing to mount
+  Serial.begin(115200);
   Wire.begin();
+
+  SPIFFS.begin(true); // Will format on the first run after failing to mount
+  SPIFFS.format();    // TODO reset config on connection MQTT fail
 
   dht.setup(GPIO_NUM_4, DHTesp::DHT22);
 
-  SetupDisplay();
+  setupDisplay();
 
   WiFiSettings.secure = true;
-  WiFiSettings.hostname = "bedroom-clock-"; // will auto add device ID
+  WiFiSettings.hostname = "bedroom-"; // will auto add device ID
   WiFiSettings.password = PASSWORD;
 
   // Set callbacks to start OTA when the portal is active
   WiFiSettings.onPortal = []()
   {
-    setup_ota();
+    isPortalActive = true;
+
+    Serial.println("WiFi config portal active");
+
+    setupOta();
   };
   WiFiSettings.onPortalWaitLoop = []()
   {
     ArduinoOTA.handle();
   };
+  WiFiSettings.onConfigSaved = []()
+  {
+    ESP.restart();
+  };
 
-  // Use stored credentials to connect to your WiFi access point.
-  // If no credentials are stored or if the access point is out of reach,
-  // an access point will be started with a captive portal to configure WiFi.
-  WiFiSettings.connect();
+  if (!isPortalActive)
+  {
+    // Use stored credentials to connect to your WiFi access point.
+    // If no credentials are stored or if the access point is out of reach,
+    // an access point will be started with a captive portal to configure WiFi.
+    WiFiSettings.connect(true, 30);
+  }
 
-  Serial.print("Password: ");
-  Serial.println(WiFiSettings.password);
+  // Serial.print("Password: ");
+  // Serial.println(WiFiSettings.password);
 
-  setup_ota(); // If you also want the OTA during regular execution
+  setupOta(); // If you also want the OTA during regular execution
+  setupNtp();
 }
 
 void loop()
 {
   ArduinoOTA.handle(); // If you also want the OTA during regular execution
 
-  pre();
-
-  int distance = ultrasonic1.read(); // in cm
-
-  if (distance < 8)
+  if (!isPortalActive)
   {
-    // TODO turn on display
-    // u8g2.setPowerSave(false);
+    Serial.println("Miau 1");
+
+    int distance = ultrasonic1.read(); // in cm
+
+    if (distance < 8)
+    {
+      // TODO turn on display
+      // u8g2.setPowerSave(false);
+    }
+
+    if (millis() - lastDisplayUpdate >= 500)
+    {
+      Serial.println('Miau 5');
+
+      float temperature = dht.getTemperature();
+      // float humidity = dht.getHumidity();
+
+      struct tm timeinfo;
+      if (!getLocalTime(&timeinfo))
+      {
+        Serial.println("Failed to obtain time");
+        return;
+      }
+
+      display.clearDisplay();
+      display.setTextSize(3);
+
+      display.setCursor(0, 0);
+      display.print(temperature);
+      display.print("°C");
+
+      display.setCursor(3, 0);
+      display.print(distance);
+
+      display.display();
+
+      lastDisplayUpdate = millis();
+    }
   }
 
-  float temperature = dht.getTemperature();
-  // float humidity = dht.getHumidity();
-
-  delay(1000);
+  // delay(1000);
 }
