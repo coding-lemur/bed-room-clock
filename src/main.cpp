@@ -16,7 +16,7 @@
 #include "config.h"
 
 Ultrasonic ultrasonic(GPIO_NUM_5, GPIO_NUM_18);
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
+Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 DHTesp dht;
 
 // TODO move to config
@@ -47,7 +47,7 @@ void setupOta()
 
 void setupDisplay()
 {
-  if (!display.begin(SSD1306_SWITCHCAPVCC))
+  if (!ssd1306.begin(SSD1306_SWITCHCAPVCC))
   {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
@@ -56,15 +56,15 @@ void setupDisplay()
 
   delay(1000);
 
-  display.clearDisplay();
+  ssd1306.clearDisplay();
 
-  display.setTextColor(WHITE);
-  display.setTextSize(2);
+  ssd1306.setTextColor(WHITE);
+  ssd1306.setTextSize(1);
 
-  display.setCursor(0, 0);
-  display.print(">> bedroom clock <<");
+  ssd1306.setCursor(0, 0);
+  ssd1306.print(">> bedroom clock <<");
 
-  display.display();
+  ssd1306.display();
 }
 
 void setupWifiSettings()
@@ -142,17 +142,27 @@ void loop()
         return;
       }
 
-      display.clearDisplay();
-      display.setTextSize(3);
+      ssd1306.clearDisplay();
+      ssd1306.setTextSize(2);
 
-      display.setCursor(0, 0);
-      display.print(temperature);
-      display.print("°C");
+      // print time
+      ssd1306.setCursor(0, 10);
+      ssd1306.print(&timeinfo, "%H");
+      ssd1306.print(":");
+      ssd1306.println(&timeinfo, "%M");
+      ssd1306.print(":");
+      ssd1306.print(&timeinfo, "%S");
 
-      display.setCursor(3, 0);
-      display.print(distance);
+      ssd1306.setTextSize(1);
 
-      display.display();
+      ssd1306.setCursor(0, 30);
+      ssd1306.print(temperature);
+      ssd1306.print("°C");
+
+      ssd1306.setCursor(0, 40);
+      ssd1306.print(distance);
+
+      ssd1306.display();
 
       lastDisplayUpdate = millis();
     }
