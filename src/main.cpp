@@ -16,7 +16,7 @@
 #include "config.h"
 
 Ultrasonic ultrasonic(GPIO_NUM_5, GPIO_NUM_18);
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 DHTesp dht;
 
 // TODO move to config
