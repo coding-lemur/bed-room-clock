@@ -1,14 +1,17 @@
 #include <Arduino.h>
+#include <SPI.h>
 #include <Wire.h>
 #include <SPIFFS.h>
+
 #include <WiFiSettings.h>
 #include <ArduinoOTA.h>
 #include <Ultrasonic.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include <Adafruit_I2CDevice.h>
 #include <DHTesp.h>
 #include <time.h>
+
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_I2CDevice.h>
 
 #include "config.h"
 
@@ -44,7 +47,7 @@ void setupOta()
 
 void setupDisplay()
 {
-  if (!display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS))
+  if (!display.begin(SSD1306_SWITCHCAPVCC))
   {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)

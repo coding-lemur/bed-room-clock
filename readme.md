@@ -31,17 +31,17 @@ Show time
 | ECHO          |             | GPIO 18      |
 | GND           |             | GND          |
 
-### OLED Display (SSD1306 128x64)
+### OLED Display (SSD1306 128x64) via SPI ⚠
 
-| Pin on Sensor | description | Pin on ESP32      |
-| ------------- | ----------- | ----------------- |
-| CS            | SPI         | -                 |
-| D/C           | SPI         | -                 |
-| RES           | SPI         | -                 |
-| SDA           | I2C         | GPIO 21 (I2C SDA) |
-| SCL           | I2C         | GPIO 22 (I2C SCL) |
-| 5V            |             | VIN (5V)          |
-| GND           |             | GND               |
+| Pin on Sensor | description | Pin on ESP32 |
+| ------------- | ----------- | ------------ |
+| GND           |             | GND          |
+| 5V            |             | VIN (5V)     |
+| SCK/SCL       | SPI         | GPIO 14      |
+| MOSI/SDA      | SPI         | GPIO 13      |
+| RES/RST       | SPI         | GPIO 17      |
+| DC            | SPI         | GPIO 16      |
+| CS            | SPI         | GPIO 15      |
 
 ### DHT22
 
