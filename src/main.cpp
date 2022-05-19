@@ -15,7 +15,7 @@
 
 #include "config.h"
 
-Ultrasonic ultrasonic1(GPIO_NUM_5, GPIO_NUM_18);
+Ultrasonic ultrasonic(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 DHTesp dht;
 
@@ -120,7 +120,7 @@ void loop()
   {
     Serial.println("Miau 1");
 
-    int distance = ultrasonic1.read(); // in cm
+    int distance = ultrasonic.read(); // in cm
 
     if (distance < 8)
     {
