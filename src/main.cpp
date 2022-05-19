@@ -6,7 +6,7 @@
 #include <WiFiSettings.h>
 #include <ArduinoOTA.h>
 #include <Ultrasonic.h>
-#include <DHTesp.h>
+#include <DHT.h>
 #include <time.h>
 
 #include <Adafruit_SSD1306.h>
@@ -17,7 +17,7 @@
 
 Ultrasonic ultrasonic(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
-DHTesp dht;
+DHT dht(DHT_PIN, DHT_TYPE);
 
 // TODO move to config
 const char *ntpServer = "pool.ntp.org";
@@ -25,11 +25,15 @@ const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
 bool isPortalActive = false;
+float lastTemperature = -100;
+float lastHumidity = -100;
+
 unsigned long lastDisplayUpdate = 0;
+unsigned long lastTemperatureUpdate = 0;
 
 void setupDht()
 {
-  dht.setup(GPIO_NUM_4, DHTesp::DHT22);
+  dht.begin();
 }
 
 void setupNtp()
@@ -120,6 +124,15 @@ void loop()
   {
     Serial.println("Miau 1");
 
+    if (millis() - lastTemperatureUpdate >= 2000)
+    {
+      // wait a two seconds between measurements
+      lastTemperature = dht.readTemperature();
+      lastHumidity = dht.readHumidity();
+
+      lastTemperatureUpdate = millis();
+    }
+
     int distance = ultrasonic.read(); // in cm
 
     if (distance < 8)
@@ -131,9 +144,6 @@ void loop()
     if (millis() - lastDisplayUpdate >= 500)
     {
       Serial.println("Miau 5");
-
-      float temperature = dht.getTemperature();
-      // float humidity = dht.getHumidity();
 
       struct tm timeinfo;
       if (!getLocalTime(&timeinfo))
@@ -155,9 +165,13 @@ void loop()
 
       ssd1306.setTextSize(1);
 
-      ssd1306.setCursor(0, 30);
-      ssd1306.print(temperature);
-      ssd1306.print("°C");
+      if (lastTemperature > -100)
+      {
+        // print temperature
+        ssd1306.setCursor(0, 30);
+        ssd1306.print(lastTemperature);
+        ssd1306.print(" C");
+      }
 
       ssd1306.setCursor(0, 40);
       ssd1306.print(distance);

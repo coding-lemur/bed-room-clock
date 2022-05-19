@@ -1,3 +1,7 @@
+//#define READ_SENSOR_INTERVAL 60000 // in ms
+//#define MQTT_UPDATE_INTERVAL 45000 // in ms
+#define PASSWORD "waaatering"
+
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
@@ -7,6 +11,6 @@
 #define OLED_CS 15
 #define OLED_RESET 17
 
-//#define READ_SENSOR_INTERVAL 60000 // in ms
-//#define MQTT_UPDATE_INTERVAL 45000 // in ms
-#define PASSWORD "waaatering"
+#define DHT_PIN 4
+//#define DHT_TYPE DHT11   // DHT 11
+#define DHT_TYPE DHT22 // DHT 22  (AM2302), AM2321
