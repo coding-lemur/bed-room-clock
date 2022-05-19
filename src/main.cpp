@@ -149,7 +149,7 @@ void loop()
       ssd1306.setCursor(0, 10);
       ssd1306.print(&timeinfo, "%H");
       ssd1306.print(":");
-      ssd1306.println(&timeinfo, "%M");
+      ssd1306.print(&timeinfo, "%M");
       ssd1306.print(":");
       ssd1306.print(&timeinfo, "%S");
 
