@@ -60,6 +60,9 @@ void setupDisplay()
 
   delay(1000);
 
+  // flip screen
+  ssd1306.setRotation(2);
+
   ssd1306.clearDisplay();
 
   ssd1306.setTextColor(WHITE);
@@ -124,7 +127,7 @@ void loop()
   {
     Serial.println("Miau 1");
 
-    if (millis() - lastTemperatureUpdate >= 2000)
+    if (millis() - lastTemperatureUpdate >= DHT_UPDATE_INTERVAL)
     {
       // wait a two seconds between measurements
       lastTemperature = dht.readTemperature();
@@ -140,7 +143,7 @@ void loop()
       // TODO turn on display
     }
 
-    if (millis() - lastDisplayUpdate >= 500)
+    if (millis() - lastDisplayUpdate >= SCREEN_UPDATE_INTERVAL)
     {
       Serial.println("Miau 5");
 
@@ -152,10 +155,10 @@ void loop()
       }
 
       ssd1306.clearDisplay();
-      ssd1306.setTextSize(2);
+      ssd1306.setTextSize(4);
 
       // print time
-      ssd1306.setCursor(0, 10);
+      ssd1306.setCursor(3, 0);
       ssd1306.print(&timeinfo, "%H");
       ssd1306.print(":");
       ssd1306.print(&timeinfo, "%M");
@@ -163,21 +166,21 @@ void loop()
       ssd1306.print(&timeinfo, "%S");*/
 
       // TODO show progressbar for seconds value
-      int16_t pixel = (122 * timeinfo.tm_sec) / 60;
-      ssd1306.fillRect(3, 17, pixel, 1, SSD1306_INVERSE);
+      int16_t pixel = (120 * timeinfo.tm_sec) / 60;
+      ssd1306.fillRect(3, 35, pixel, 2, SSD1306_INVERSE);
 
       ssd1306.setTextSize(1);
 
       if (lastTemperature > -100)
       {
         // print temperature
-        ssd1306.setCursor(0, 30);
+        ssd1306.setCursor(ssd1306.width() - 50, ssd1306.height() - 10);
         ssd1306.print(lastTemperature);
         ssd1306.print(" C");
       }
 
-      ssd1306.setCursor(0, 40);
-      ssd1306.print(distance);
+      /*ssd1306.setCursor(0, 40);
+      ssd1306.print(distance);*/
 
       ssd1306.display();
 
