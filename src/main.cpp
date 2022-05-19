@@ -138,7 +138,6 @@ void loop()
     if (distance < 8)
     {
       // TODO turn on display
-      // u8g2.setPowerSave(false);
     }
 
     if (millis() - lastDisplayUpdate >= 500)
@@ -160,8 +159,12 @@ void loop()
       ssd1306.print(&timeinfo, "%H");
       ssd1306.print(":");
       ssd1306.print(&timeinfo, "%M");
-      ssd1306.print(":");
-      ssd1306.print(&timeinfo, "%S");
+      /*ssd1306.print(":");
+      ssd1306.print(&timeinfo, "%S");*/
+
+      // TODO show progressbar for seconds value
+      int16_t pixel = (122 * timeinfo.tm_sec) / 60;
+      ssd1306.fillRect(3, 17, pixel, 1, SSD1306_INVERSE);
 
       ssd1306.setTextSize(1);
 
@@ -181,6 +184,4 @@ void loop()
       lastDisplayUpdate = millis();
     }
   }
-
-  // delay(1000);
 }
