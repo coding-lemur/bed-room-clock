@@ -27,7 +27,7 @@ Show time
 | Pin on Sensor | description | Pin on ESP32 |
 | ------------- | ----------- | ------------ |
 | VCC           |             | VIN (5V)     |
-| TRIG          |             | GPIO 5       |
+| TRIG          |             | GPIO 4       |
 | ECHO          |             | GPIO 18      |
 | GND           |             | GND          |
 
