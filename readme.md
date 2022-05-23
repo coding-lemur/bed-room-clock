@@ -31,7 +31,7 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 | Pin on Sensor | description | Pin on ESP32 |
 | ------------- | ----------- | ------------ |
 | VCC           |             | VIN (5V)     |
-| TRIG          |             | GPIO 4       |
+| TRIG          |             | GPIO 5       |
 | ECHO          |             | GPIO 18      |
 | GND           |             | GND          |
 
