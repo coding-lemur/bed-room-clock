@@ -2,19 +2,23 @@
 
 ## Description
 
-Show time
+You can put this device in your bedroom and you won't be disturbed by the light of the display. The display is only activated when you move your hand in front of the device and then it automatically goes off again.
 
 ## Features
 
 - OLED display
-- display only on
+- display turn on if you move your hand in front of it
 - temperature and humidity sensor
 - MQTT support (for Node-Red or Home Assistant)
 - easy integration in own WiFi network (Hotspot settings-page)
+- OTA updates
 
 ## Parts
 
-- later...
+- ESP32 DEV Board
+- SSD1306 (I use a 2.42 inch version)
+- HC-SR04
+- DHT22
 
 ## Sketch
 
