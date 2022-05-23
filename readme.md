@@ -35,7 +35,7 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 | ECHO          |             | GPIO 18      |
 | GND           |             | GND          |
 
-### OLED Display (SSD1306 128x64) via SPI ⚠
+### OLED Display (SSD1306 128x64) via SPI
 
 | Pin on Sensor | description | Pin on ESP32 |
 | ------------- | ----------- | ------------ |
