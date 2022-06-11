@@ -30,6 +30,7 @@ float lastHumidity = -100;
 
 unsigned long lastDisplayUpdate = 0;
 unsigned long lastTemperatureUpdate = 0;
+unsigned long lastScreenOn = 0;
 
 void setupDht()
 {
@@ -123,61 +124,73 @@ void loop()
 {
   ArduinoOTA.handle(); // If you also want the OTA during regular execution
 
-  if (!isPortalActive)
+  if (isPortalActive)
   {
-    if (millis() - lastTemperatureUpdate >= DHT_UPDATE_INTERVAL)
-    {
-      // wait a two seconds between measurements
-      lastTemperature = dht.readTemperature();
-      lastHumidity = dht.readHumidity();
+    return;
+  }
 
-      lastTemperatureUpdate = millis();
+  bool shouldUpdateDhtValues = millis() - lastTemperatureUpdate >= DHT_UPDATE_INTERVAL;
+
+  if (shouldUpdateDhtValues)
+  {
+    // wait a two seconds between measurements
+    lastTemperature = dht.readTemperature();
+    lastHumidity = dht.readHumidity();
+
+    lastTemperatureUpdate = millis();
+  }
+
+  int distance = ultrasonic.read(); // in cm
+
+  if (distance < SCREEN_ON_DISTANCE)
+  {
+    // turn on display
+    lastScreenOn = millis();
+  }
+
+  bool isDisplayOff = millis() - lastScreenOn >= SCREEN_ON_INTERVAL;
+  bool shouldUpdateScreen = millis() - lastDisplayUpdate >= SCREEN_UPDATE_INTERVAL;
+
+  // turn on/off screen
+  uint8_t command = isDisplayOff ? SSD1306_DISPLAYOFF : SSD1306_DISPLAYON;
+  ssd1306.ssd1306_command(command);
+
+  if (!isDisplayOff && shouldUpdateScreen)
+  {
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo))
+    {
+      // TODO show error on display
+      Serial.println("Failed to obtain time");
+      return;
     }
 
-    int distance = ultrasonic.read(); // in cm
+    ssd1306.clearDisplay();
 
-    if (distance < 8)
+    // show time
+    ssd1306.setTextSize(4);
+    ssd1306.setCursor(3, 0);
+    ssd1306.print(&timeinfo, "%H");
+    ssd1306.print(":");
+    ssd1306.print(&timeinfo, "%M");
+    /*ssd1306.print(":");
+    ssd1306.print(&timeinfo, "%S");*/
+
+    // show progressbar (for seconds value)
+    int16_t pixel = (120 * timeinfo.tm_sec) / 60;
+    ssd1306.fillRect(3, 35, pixel, 2, SSD1306_INVERSE);
+
+    if (lastTemperature > -100)
     {
-      // TODO turn on display
+      // show temperature
+      ssd1306.setTextSize(1);
+      ssd1306.setCursor(ssd1306.width() - 50, ssd1306.height() - 10);
+      ssd1306.print(lastTemperature);
+      ssd1306.print(" C");
     }
 
-    if (millis() - lastDisplayUpdate >= SCREEN_UPDATE_INTERVAL)
-    {
-      struct tm timeinfo;
-      if (!getLocalTime(&timeinfo))
-      {
-        // TODO show error on display
-        Serial.println("Failed to obtain time");
-        return;
-      }
+    ssd1306.display();
 
-      ssd1306.clearDisplay();
-
-      // show time
-      ssd1306.setTextSize(4);
-      ssd1306.setCursor(3, 0);
-      ssd1306.print(&timeinfo, "%H");
-      ssd1306.print(":");
-      ssd1306.print(&timeinfo, "%M");
-      /*ssd1306.print(":");
-      ssd1306.print(&timeinfo, "%S");*/
-
-      // show progressbar (for seconds value)
-      int16_t pixel = (120 * timeinfo.tm_sec) / 60;
-      ssd1306.fillRect(3, 35, pixel, 2, SSD1306_INVERSE);
-
-      if (lastTemperature > -100)
-      {
-        // show temperature
-        ssd1306.setTextSize(1);
-        ssd1306.setCursor(ssd1306.width() - 50, ssd1306.height() - 10);
-        ssd1306.print(lastTemperature);
-        ssd1306.print(" C");
-      }
-
-      ssd1306.display();
-
-      lastDisplayUpdate = millis();
-    }
+    lastDisplayUpdate = millis();
   }
 }
