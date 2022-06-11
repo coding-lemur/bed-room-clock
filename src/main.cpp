@@ -125,8 +125,6 @@ void loop()
 
   if (!isPortalActive)
   {
-    Serial.println("Miau 1");
-
     if (millis() - lastTemperatureUpdate >= DHT_UPDATE_INTERVAL)
     {
       // wait a two seconds between measurements
@@ -145,19 +143,18 @@ void loop()
 
     if (millis() - lastDisplayUpdate >= SCREEN_UPDATE_INTERVAL)
     {
-      Serial.println("Miau 5");
-
       struct tm timeinfo;
       if (!getLocalTime(&timeinfo))
       {
+        // TODO show error on display
         Serial.println("Failed to obtain time");
         return;
       }
 
       ssd1306.clearDisplay();
-      ssd1306.setTextSize(4);
 
-      // print time
+      // show time
+      ssd1306.setTextSize(4);
       ssd1306.setCursor(3, 0);
       ssd1306.print(&timeinfo, "%H");
       ssd1306.print(":");
@@ -165,22 +162,18 @@ void loop()
       /*ssd1306.print(":");
       ssd1306.print(&timeinfo, "%S");*/
 
-      // TODO show progressbar for seconds value
+      // show progressbar (for seconds value)
       int16_t pixel = (120 * timeinfo.tm_sec) / 60;
       ssd1306.fillRect(3, 35, pixel, 2, SSD1306_INVERSE);
 
-      ssd1306.setTextSize(1);
-
       if (lastTemperature > -100)
       {
-        // print temperature
+        // show temperature
+        ssd1306.setTextSize(1);
         ssd1306.setCursor(ssd1306.width() - 50, ssd1306.height() - 10);
         ssd1306.print(lastTemperature);
         ssd1306.print(" C");
       }
-
-      /*ssd1306.setCursor(0, 40);
-      ssd1306.print(distance);*/
 
       ssd1306.display();
 
