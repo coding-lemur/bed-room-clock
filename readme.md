@@ -1,5 +1,7 @@
 # Bedroom Clock with ESP32
 
+![final device](/docs/device.jpg)
+
 ## Description
 
 You can put this device in your bedroom and you won't be disturbed by the light of the display. The display is only activated when you move your hand in front of the device and then it automatically goes off again.
