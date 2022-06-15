@@ -15,6 +15,10 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 - easy integration in own WiFi network (Hotspot settings-page)
 - OTA updates
 
+## Demo
+
+[See demo on Youtube](https://youtu.be/ncI8ftF5udI)
+
 ## Parts
 
 - ESP32 DEV Board
