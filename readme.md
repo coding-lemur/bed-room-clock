@@ -28,7 +28,7 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 
 ## Sketch
 
-![sketch](/docs/beed-room-clock%20Sketch_bb.png)
+![sketch](/docs/beed-room-clock-Sketch_bb.png)
 
 ## Wiring
 
