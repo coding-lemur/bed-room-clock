@@ -40,6 +40,11 @@ unsigned long lastDisplayUpdate = 0;
 unsigned long lastTemperatureUpdate = 0;
 unsigned long lastScreenOn = 0;
 
+double round2(double value)
+{
+  return (int)(value * 100 + 0.5) / 100.0;
+}
+
 String GetDeviceId()
 {
   int index = WiFiSettings.hostname.lastIndexOf('-');
@@ -91,8 +96,8 @@ StaticJsonDocument<1024> getInfoJson()
   network["ip"] = WiFi.localIP().toString();
 
   JsonObject values = doc.createNestedObject("values");
-  values["temp"] = lastTemperature;
-  values["humidity"] = lastHumidity;
+  values["temp"] = round2(lastTemperature);
+  values["humidity"] = round2(lastHumidity);
 
   return doc;
 }
