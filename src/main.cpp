@@ -8,6 +8,8 @@
 #include <Ultrasonic.h>
 #include <DHT.h>
 #include <time.h>
+#include <ArduinoJson.h>
+#include <StreamUtils.h>
 
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
@@ -19,16 +21,16 @@
 
 #include "config.h"
 
+const String version = "1.0.0";
+
 Ultrasonic ultrasonic(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 DHT dht(DHT_PIN, DHT_TYPE);
-
 AsyncWebServer server(80);
 
-// TODO move to config
-const char *ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 3600;
-const int daylightOffset_sec = 3600;
+const char *ntpServer = "pool.ntp.org"; // TODO move to config
+const long gmtOffset_sec = 3600;        // TODO move to config
+const int daylightOffset_sec = 3600;    // TODO move to config
 
 bool isPortalActive = false;
 float lastTemperature = -100;
@@ -38,12 +40,78 @@ unsigned long lastDisplayUpdate = 0;
 unsigned long lastTemperatureUpdate = 0;
 unsigned long lastScreenOn = 0;
 
+String GetDeviceId()
+{
+  int index = WiFiSettings.hostname.lastIndexOf('-');
+  int length = WiFiSettings.hostname.length();
+  return WiFiSettings.hostname.substring(index + 1, length);
+}
+
+// TODO move to library
+int GetRssiAsQuality(int rssi)
+{
+  int quality = 0;
+
+  if (rssi <= -100)
+  {
+    quality = 0;
+  }
+  else if (rssi >= -50)
+  {
+    quality = 100;
+  }
+  else
+  {
+    quality = 2 * (rssi + 100);
+  }
+
+  return quality;
+}
+
+StaticJsonDocument<1024> getInfoJson()
+{
+  StaticJsonDocument<256> doc;
+  doc["version"] = version;
+
+  JsonObject system = doc.createNestedObject("system");
+  system["deviceId"] = GetDeviceId();
+  system["freeHeap"] = ESP.getFreeHeap(); // in bytes
+  // system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
+  //   system["uptime"] = NTP.getUptimeString();
+
+  // JsonObject fileSystem = doc.createNestedObject("fileSystem");
+  // fileSystem["totalBytes"] = SPIFFS.totalBytes();
+  // fileSystem["usedBytes"] = SPIFFS.usedBytes();
+
+  JsonObject network = doc.createNestedObject("network");
+  int8_t rssi = WiFi.RSSI();
+  network["wifiRssi"] = rssi;
+  network["wifiQuality"] = GetRssiAsQuality(rssi);
+  network["wifiSsid"] = WiFi.SSID();
+  network["ip"] = WiFi.localIP().toString();
+
+  JsonObject values = doc.createNestedObject("values");
+  values["temp"] = lastTemperature;
+  values["humidity"] = lastHumidity;
+
+  return doc;
+}
+
 void setupWebserver()
 {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(200, "text/plain", "Hi! This is a sample response."); });
 
-  AsyncElegantOTA.begin(&server); // Start AsyncElegantOTA
+  server.on("/api/info", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+        auto infoJson = getInfoJson();
+
+        StringStream stream;
+        auto size = serializeJson(infoJson, stream);
+
+        request->send(stream, "application/json", size); });
+
+  AsyncElegantOTA.begin(&server);
   server.begin();
 }
 
@@ -187,7 +255,7 @@ void loop()
     ssd1306.setTextSize(4);
     ssd1306.setCursor(3, 0);
     ssd1306.print(&timeinfo, "%H");
-    ssd1306.print(":");
+    ssd1306.print(":"); // TODO blink
     ssd1306.print(&timeinfo, "%M");
     /*ssd1306.print(":");
     ssd1306.print(&timeinfo, "%S");*/
@@ -195,6 +263,12 @@ void loop()
     // show progressbar (for seconds value)
     int16_t pixel = (120 * timeinfo.tm_sec) / 60;
     ssd1306.fillRect(3, 35, pixel, 2, SSD1306_INVERSE);
+
+    // debug data
+    ssd1306.setTextSize(1);
+    ssd1306.setCursor(0, ssd1306.height() - 10);
+    ssd1306.print(distance);
+    ssd1306.print(" cm");
 
     if (lastTemperature > -100)
     {
