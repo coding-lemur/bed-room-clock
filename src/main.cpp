@@ -75,9 +75,9 @@ int GetRssiAsQuality(int rssi)
   return quality;
 }
 
-StaticJsonDocument<1024> getInfoJson()
+StaticJsonDocument<384> getInfoJson()
 {
-  StaticJsonDocument<256> doc;
+  StaticJsonDocument<384> doc;
   doc["version"] = version;
 
   JsonObject system = doc.createNestedObject("system");
