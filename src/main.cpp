@@ -96,6 +96,7 @@ StaticJsonDocument<1024> getInfoJson()
   network["wifiQuality"] = GetRssiAsQuality(rssi);
   network["wifiSsid"] = WiFi.SSID();
   network["ip"] = WiFi.localIP().toString();
+  network["mac"] = WiFi.macAddress();
 
   JsonObject values = doc.createNestedObject("values");
   values["temp"] = round2(lastTemperature);
