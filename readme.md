@@ -80,7 +80,8 @@ Returning an JSON object with following data:
     "wifiRssi": -59,
     "wifiQuality": 82,
     "wifiSsid": "wifi-name",
-    "ip": "192.168.178.70"
+    "ip": "192.168.178.70",
+    "mac": "C5:5F:4B:F0:64:29"
   },
   "values": {
     "temp": 24.6,
