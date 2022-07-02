@@ -1,12 +1,11 @@
-//#define READ_SENSOR_INTERVAL 60000 // in ms
-//#define MQTT_UPDATE_INTERVAL 45000 // in ms
 #define PASSWORD "waaatering"
 
-#define SCREEN_WIDTH 128            // OLED display width, in pixels
-#define SCREEN_HEIGHT 64            // OLED display height, in pixels
-#define SCREEN_UPDATE_INTERVAL 1000 // in milliseconds
-#define SCREEN_ON_DISTANCE 8        // in cm
-#define SCREEN_ON_INTERVAL 5000     // in milliseconds
+#define SCREEN_WIDTH 128                // OLED display width, in pixels
+#define SCREEN_HEIGHT 64                // OLED display height, in pixels
+#define SCREEN_UPDATE_INTERVAL 1000     // in milliseconds
+#define SCREEN_ON_DISTANCE 8            // in cm
+#define SCREEN_ON_DISTANCE_INTERVAL 500 // in milliseconds
+#define SCREEN_ON_INTERVAL 5000         // in milliseconds
 
 #define OLED_MOSI 13
 #define OLED_CLK 14

@@ -35,9 +35,11 @@ const int daylightOffset_sec = 3600;    // TODO move to config
 bool isPortalActive = false;
 float lastTemperature = -100;
 float lastHumidity = -100;
+unsigned int lastDistance = 500;
 
 unsigned long lastDisplayUpdate = 0;
 unsigned long lastTemperatureUpdate = 0;
+unsigned long lastDistanceUpdate = 0;
 unsigned long lastScreenOn = 0;
 
 double round2(double value)
@@ -229,12 +231,17 @@ void loop()
     lastTemperatureUpdate = millis();
   }
 
-  int distance = ultrasonic.read(); // in cm
+  bool shouldUpdateDistance = millis() - lastDistanceUpdate >= SCREEN_ON_DISTANCE_INTERVAL;
 
-  if (distance < SCREEN_ON_DISTANCE)
+  if (shouldUpdateDistance)
   {
-    // turn on display
-    lastScreenOn = millis();
+    lastDistance = ultrasonic.read(); // in cm
+
+    if (lastDistance < SCREEN_ON_DISTANCE)
+    {
+      // turn on display
+      lastScreenOn = millis();
+    }
   }
 
   bool isDisplayOff = millis() - lastScreenOn >= SCREEN_ON_INTERVAL;
@@ -272,7 +279,7 @@ void loop()
     // debug data
     ssd1306.setTextSize(1);
     ssd1306.setCursor(0, ssd1306.height() - 10);
-    ssd1306.print(distance);
+    ssd1306.print(lastDistance);
     ssd1306.print(" cm");
 
     if (lastTemperature > -100)
