@@ -65,7 +65,7 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 
 ## API endpoint
 
-`<IP>/api/info`
+GET `<IP>/api/info`
 
 Returning an JSON object with following data:
 
