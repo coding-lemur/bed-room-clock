@@ -3,7 +3,7 @@
 #define SCREEN_WIDTH 128                       // OLED display width, in pixels
 #define SCREEN_HEIGHT 64                       // OLED display height, in pixels
 #define SCREEN_UPDATE_INTERVAL 1000            // in milliseconds
-#define SCREEN_ON_DISTANCE 8                   // in cm
+#define SCREEN_ON_DISTANCE 12                  // in cm
 #define SCREEN_ON_DISTANCE_INTERVAL 0.8 * 1000 // in milliseconds
 #define SCREEN_ON_INTERVAL 5 * 1000            // in milliseconds
 
