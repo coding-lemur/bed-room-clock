@@ -120,10 +120,8 @@ void setupWebserver()
 
   server.on("/api/info", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-        auto infoJson = getInfoJson();
-
         StringStream stream;
-        auto size = serializeJson(infoJson, stream);
+        auto size = serializeJson(getInfoJson(), stream);
 
         request->send(stream, "application/json", size); });
 
