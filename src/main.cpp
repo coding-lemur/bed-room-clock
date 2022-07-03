@@ -47,7 +47,7 @@ double round2(double value)
   return (int)(value * 100 + 0.5) / 100.0;
 }
 
-String GetDeviceId()
+String getDeviceId()
 {
   int index = WiFiSettings.hostname.lastIndexOf('-');
   int length = WiFiSettings.hostname.length();
@@ -55,7 +55,7 @@ String GetDeviceId()
 }
 
 // TODO move to library
-int GetRssiAsQuality(int rssi)
+int getRssiAsQuality(int rssi)
 {
   int quality = 0;
 
@@ -81,7 +81,7 @@ StaticJsonDocument<384> getInfoJson()
   doc["version"] = version;
 
   JsonObject system = doc.createNestedObject("system");
-  system["deviceId"] = GetDeviceId();
+  system["deviceId"] = getDeviceId();
   system["freeHeap"] = ESP.getFreeHeap(); // in bytes
   // system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
   //   system["uptime"] = NTP.getUptimeString();
@@ -93,7 +93,7 @@ StaticJsonDocument<384> getInfoJson()
   JsonObject network = doc.createNestedObject("network");
   int8_t rssi = WiFi.RSSI();
   network["wifiRssi"] = rssi;
-  network["wifiQuality"] = GetRssiAsQuality(rssi);
+  network["wifiQuality"] = getRssiAsQuality(rssi);
   network["wifiSsid"] = WiFi.SSID();
   network["ip"] = WiFi.localIP().toString();
   network["mac"] = WiFi.macAddress();
