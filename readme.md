@@ -11,7 +11,6 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 - OLED display
 - display turn on if you move your hand in front of it
 - temperature and humidity sensor
-- MQTT support (for Node-Red or Home Assistant)
 - easy integration in own WiFi network (Hotspot settings-page)
 - API endpoint
 - OTA updates
