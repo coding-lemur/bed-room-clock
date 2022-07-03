@@ -8,29 +8,128 @@
 #include <Ultrasonic.h>
 #include <DHT.h>
 #include <time.h>
+#include <ArduinoJson.h>
+#include <StreamUtils.h>
 
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_I2CDevice.h>
 
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncElegantOTA.h>
+
 #include "config.h"
+
+const String version = "1.0.0";
 
 Ultrasonic ultrasonic(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 DHT dht(DHT_PIN, DHT_TYPE);
+AsyncWebServer server(80);
 
-// TODO move to config
-const char *ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 3600;
-const int daylightOffset_sec = 3600;
+const char *ntpServer = "pool.ntp.org"; // TODO move to config
+const long gmtOffset_sec = 3600;        // TODO move to config
+const int daylightOffset_sec = 3600;    // TODO move to config
 
 bool isPortalActive = false;
 float lastTemperature = -100;
 float lastHumidity = -100;
+unsigned int lastDistance = 500;
 
 unsigned long lastDisplayUpdate = 0;
 unsigned long lastTemperatureUpdate = 0;
+unsigned long lastDistanceUpdate = 0;
 unsigned long lastScreenOn = 0;
+
+double round2(double value)
+{
+  return (int)(value * 100 + 0.5) / 100.0;
+}
+
+String GetDeviceId()
+{
+  int index = WiFiSettings.hostname.lastIndexOf('-');
+  int length = WiFiSettings.hostname.length();
+  return WiFiSettings.hostname.substring(index + 1, length);
+}
+
+// TODO move to library
+int GetRssiAsQuality(int rssi)
+{
+  int quality = 0;
+
+  if (rssi <= -100)
+  {
+    quality = 0;
+  }
+  else if (rssi >= -50)
+  {
+    quality = 100;
+  }
+  else
+  {
+    quality = 2 * (rssi + 100);
+  }
+
+  return quality;
+}
+
+StaticJsonDocument<384> getInfoJson()
+{
+  StaticJsonDocument<384> doc;
+  doc["version"] = version;
+
+  JsonObject system = doc.createNestedObject("system");
+  system["deviceId"] = GetDeviceId();
+  system["freeHeap"] = ESP.getFreeHeap(); // in bytes
+  // system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
+  //   system["uptime"] = NTP.getUptimeString();
+
+  // JsonObject fileSystem = doc.createNestedObject("fileSystem");
+  // fileSystem["totalBytes"] = SPIFFS.totalBytes();
+  // fileSystem["usedBytes"] = SPIFFS.usedBytes();
+
+  JsonObject network = doc.createNestedObject("network");
+  int8_t rssi = WiFi.RSSI();
+  network["wifiRssi"] = rssi;
+  network["wifiQuality"] = GetRssiAsQuality(rssi);
+  network["wifiSsid"] = WiFi.SSID();
+  network["ip"] = WiFi.localIP().toString();
+  network["mac"] = WiFi.macAddress();
+
+  JsonObject values = doc.createNestedObject("values");
+
+  if (lastTemperature > -100)
+  {
+    values["temp"] = round2(lastTemperature);
+  }
+
+  if (lastHumidity > -100)
+  {
+    values["humidity"] = round2(lastHumidity);
+  }
+
+  return doc;
+}
+
+void setupWebserver()
+{
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(200, "text/plain", "Hi! This is a sample response."); });
+
+  server.on("/api/info", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+        auto infoJson = getInfoJson();
+
+        StringStream stream;
+        auto size = serializeJson(infoJson, stream);
+
+        request->send(stream, "application/json", size); });
+
+  AsyncElegantOTA.begin(&server);
+  server.begin();
+}
 
 void setupDht()
 {
@@ -114,6 +213,7 @@ void setup()
   // SPIFFS.format();    // TODO reset config on connection MQTT fail
 
   setupWifiSettings();
+  setupWebserver();
   setupDisplay();
   setupOta();
   setupNtp();
@@ -140,12 +240,17 @@ void loop()
     lastTemperatureUpdate = millis();
   }
 
-  int distance = ultrasonic.read(); // in cm
+  bool shouldUpdateDistance = millis() - lastDistanceUpdate >= SCREEN_ON_DISTANCE_INTERVAL;
 
-  if (distance < SCREEN_ON_DISTANCE)
+  if (shouldUpdateDistance)
   {
-    // turn on display
-    lastScreenOn = millis();
+    lastDistance = ultrasonic.read(); // in cm
+
+    if (lastDistance < SCREEN_ON_DISTANCE)
+    {
+      // turn on display
+      lastScreenOn = millis();
+    }
   }
 
   bool isDisplayOff = millis() - lastScreenOn >= SCREEN_ON_INTERVAL;
@@ -171,7 +276,7 @@ void loop()
     ssd1306.setTextSize(4);
     ssd1306.setCursor(3, 0);
     ssd1306.print(&timeinfo, "%H");
-    ssd1306.print(":");
+    ssd1306.print(":"); // TODO blink
     ssd1306.print(&timeinfo, "%M");
     /*ssd1306.print(":");
     ssd1306.print(&timeinfo, "%S");*/

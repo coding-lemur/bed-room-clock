@@ -13,6 +13,7 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 - temperature and humidity sensor
 - MQTT support (for Node-Red or Home Assistant)
 - easy integration in own WiFi network (Hotspot settings-page)
+- API endpoint
 - OTA updates
 
 ## Demo
@@ -61,3 +62,30 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 | 2             |             | GPIO 4 (analog) |
 | 3             |             | -               |
 | 4             |             | GND             |
+
+## API endpoint
+
+GET `<IP>/api/info`
+
+Returning an JSON object with following data:
+
+```json
+{
+  "version": "1.0.0",
+  "system": {
+    "deviceId": "xxyyzzz",
+    "freeHeap": 236480
+  },
+  "network": {
+    "wifiRssi": -59,
+    "wifiQuality": 82,
+    "wifiSsid": "wifi-name",
+    "ip": "192.168.178.70",
+    "mac": "C5:5F:4B:F0:64:29"
+  },
+  "values": {
+    "temp": 24.6,
+    "humidity": 42.7
+  }
+}
+```
