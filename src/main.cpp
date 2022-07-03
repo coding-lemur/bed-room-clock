@@ -99,8 +99,16 @@ StaticJsonDocument<384> getInfoJson()
   network["mac"] = WiFi.macAddress();
 
   JsonObject values = doc.createNestedObject("values");
-  values["temp"] = round2(lastTemperature);
-  values["humidity"] = round2(lastHumidity);
+
+  if (lastTemperature > -100)
+  {
+    values["temp"] = round2(lastTemperature);
+  }
+
+  if (lastHumidity > -100)
+  {
+    values["humidity"] = round2(lastHumidity);
+  }
 
   return doc;
 }
@@ -276,12 +284,6 @@ void loop()
     // show progressbar (for seconds value)
     int16_t pixel = (120 * timeinfo.tm_sec) / 60;
     ssd1306.fillRect(3, 35, pixel, 2, SSD1306_INVERSE);
-
-    // debug data
-    ssd1306.setTextSize(1);
-    ssd1306.setCursor(0, ssd1306.height() - 10);
-    ssd1306.print(lastDistance);
-    ssd1306.print(" cm");
 
     if (lastTemperature > -100)
     {
