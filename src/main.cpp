@@ -36,6 +36,7 @@ bool isPortalActive = false;
 float lastTemperature = -100;
 float lastHumidity = -100;
 unsigned int lastDistance = 500;
+bool isTimeColonVisible = true;
 
 unsigned long lastDisplayUpdate = 0;
 unsigned long lastDhtUpdate = 0;
@@ -277,7 +278,10 @@ void loop()
     ssd1306.setTextSize(4);
     ssd1306.setCursor(3, 0);
     ssd1306.print(&timeinfo, "%H");
-    ssd1306.print(":"); // TODO blink
+
+    ssd1306.print(isTimeColonVisible ? ":" : " ");
+    isTimeColonVisible = !isTimeColonVisible;
+
     ssd1306.print(&timeinfo, "%M");
     /*ssd1306.print(":");
     ssd1306.print(&timeinfo, "%S");*/
