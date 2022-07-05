@@ -5,7 +5,7 @@
 
 #include <WiFiSettings.h>
 #include <ArduinoOTA.h>
-#include <Ultrasonic.h>
+#include <NewPing.h>
 #include <DHT.h>
 #include <time.h>
 #include <ArduinoJson.h>
@@ -23,7 +23,7 @@
 
 const String version = "1.0.0";
 
-Ultrasonic ultrasonic(GPIO_NUM_5, GPIO_NUM_18);
+NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 DHT dht(DHT_PIN, DHT_TYPE);
 AsyncWebServer server(80);
@@ -38,7 +38,7 @@ float lastHumidity = -100;
 unsigned int lastDistance = 500;
 
 unsigned long lastDisplayUpdate = 0;
-unsigned long lastTemperatureUpdate = 0;
+unsigned long lastDhtUpdate = 0;
 unsigned long lastDistanceUpdate = 0;
 unsigned long lastScreenOn = 0;
 
@@ -126,6 +126,7 @@ void setupWebserver()
         request->send(stream, "application/json", size); });
 
   AsyncElegantOTA.begin(&server);
+
   server.begin();
 }
 
@@ -227,7 +228,7 @@ void loop()
     return;
   }
 
-  bool shouldUpdateDhtValues = millis() - lastTemperatureUpdate >= DHT_UPDATE_INTERVAL;
+  bool shouldUpdateDhtValues = millis() - lastDhtUpdate >= DHT_UPDATE_INTERVAL;
 
   if (shouldUpdateDhtValues)
   {
@@ -235,20 +236,22 @@ void loop()
     lastTemperature = dht.readTemperature();
     lastHumidity = dht.readHumidity();
 
-    lastTemperatureUpdate = millis();
+    lastDhtUpdate = millis();
   }
 
   bool shouldUpdateDistance = millis() - lastDistanceUpdate >= SCREEN_ON_DISTANCE_INTERVAL;
 
   if (shouldUpdateDistance)
   {
-    lastDistance = ultrasonic.read(); // in cm
+    lastDistance = sonar.ping_cm();
 
-    if (lastDistance < SCREEN_ON_DISTANCE)
+    if (lastDistance > 0 && lastDistance <= SCREEN_ON_DISTANCE)
     {
       // turn on display
       lastScreenOn = millis();
     }
+
+    lastDistanceUpdate = millis();
   }
 
   bool isDisplayOff = millis() - lastScreenOn >= SCREEN_ON_INTERVAL;
