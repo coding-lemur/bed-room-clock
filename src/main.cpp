@@ -35,7 +35,6 @@ const int daylightOffset_sec = 3600;    // TODO move to config
 bool isPortalActive = false;
 float lastTemperature = -100;
 float lastHumidity = -100;
-unsigned int lastDistance = 500;
 bool isTimeColonVisible = true;
 
 unsigned long lastDisplayUpdate = 0;
@@ -174,8 +173,23 @@ void setupDisplay()
   ssd1306.display();
 }
 
+void connectToWifi()
+{
+  // Use stored credentials to connect to your WiFi access point.
+  // If no credentials are stored or if the access point is out of reach,
+  // an access point will be started with a captive portal to configure WiFi.
+  WiFiSettings.connect(true, 30);
+}
+
+void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+  connectToWifi();
+}
+
 void setupWifiSettings()
 {
+  WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_STA_DISCONNECTED);
+
   WiFiSettings.secure = true;
   WiFiSettings.hostname = "bedroom-"; // will auto add device ID
   WiFiSettings.password = PASSWORD;
@@ -198,10 +212,7 @@ void setupWifiSettings()
     ESP.restart();
   };
 
-  // Use stored credentials to connect to your WiFi access point.
-  // If no credentials are stored or if the access point is out of reach,
-  // an access point will be started with a captive portal to configure WiFi.
-  WiFiSettings.connect(true, 30);
+  connectToWifi();
 }
 
 void setup()
@@ -240,19 +251,11 @@ void loop()
     lastDhtUpdate = millis();
   }
 
-  bool shouldUpdateDistance = millis() - lastDistanceUpdate >= SCREEN_ON_DISTANCE_INTERVAL;
-
-  if (shouldUpdateDistance)
+  unsigned long lastDistance = sonar.ping_cm();
+  if (lastDistance > 0 && lastDistance <= SCREEN_ON_DISTANCE)
   {
-    lastDistance = sonar.ping_cm();
-
-    if (lastDistance > 0 && lastDistance <= SCREEN_ON_DISTANCE)
-    {
-      // turn on display
-      lastScreenOn = millis();
-    }
-
-    lastDistanceUpdate = millis();
+    // turn on display
+    lastScreenOn = millis();
   }
 
   bool isDisplayOff = millis() - lastScreenOn >= SCREEN_ON_INTERVAL;
