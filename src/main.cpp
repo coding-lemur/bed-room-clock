@@ -21,7 +21,7 @@
 
 #include "config.h"
 
-const String version = "1.0.0";
+const String version = "1.1.0";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
@@ -47,6 +47,7 @@ double round2(double value)
   return (int)(value * 100 + 0.5) / 100.0;
 }
 
+// TODO move to library
 String getDeviceId()
 {
   int index = WiFiSettings.hostname.lastIndexOf('-');
@@ -82,7 +83,8 @@ StaticJsonDocument<384> getInfoJson()
 
   JsonObject system = doc.createNestedObject("system");
   system["deviceId"] = getDeviceId();
-  system["freeHeap"] = ESP.getFreeHeap(); // in bytes
+  system["freeHeap"] = ESP.getFreeHeap();                // in bytes
+  system["uptime"] = esp_timer_get_time() / 1000 / 1000; // in seconds
   // system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
   //   system["uptime"] = NTP.getUptimeString();
 
@@ -159,31 +161,23 @@ void setupDisplay()
 
   delay(1000);
 
-  // flip screen
-  ssd1306.setRotation(2);
-
+  ssd1306.setRotation(2); // flip screen
   ssd1306.clearDisplay();
-
   ssd1306.setTextColor(WHITE);
   ssd1306.setTextSize(1);
 
   ssd1306.setCursor(0, 0);
-  ssd1306.print(">> bedroom clock <<");
+  ssd1306.print(">> BedRoom Clock <<");
+
+  ssd1306.setCursor(0, 2);
+  ssd1306.print(version);
 
   ssd1306.display();
 }
 
-void connectToWifi()
-{
-  // Use stored credentials to connect to your WiFi access point.
-  // If no credentials are stored or if the access point is out of reach,
-  // an access point will be started with a captive portal to configure WiFi.
-  WiFiSettings.connect(true, 30);
-}
-
 void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 {
-  connectToWifi();
+  WiFi.reconnect();
 }
 
 void setupWifiSettings()
@@ -202,6 +196,21 @@ void setupWifiSettings()
     Serial.println("WiFi config portal active");
 
     setupOta();
+
+    ssd1306.clearDisplay();
+    ssd1306.setTextSize(1);
+
+    ssd1306.setCursor(0, 0);
+    ssd1306.print("connect to WiFi and setup the device");
+
+    ssd1306.setCursor(0, 10);
+    ssd1306.print(WiFiSettings.hostname);
+
+    ssd1306.setCursor(0, 20);
+    ssd1306.print("password: ");
+    ssd1306.print(PASSWORD);
+
+    ssd1306.display();
   };
   WiFiSettings.onPortalWaitLoop = []()
   {
@@ -211,8 +220,50 @@ void setupWifiSettings()
   {
     ESP.restart();
   };
+  WiFiSettings.onConnect = []()
+  {
+    ssd1306.clearDisplay();
+    ssd1306.setTextSize(1);
 
-  connectToWifi();
+    ssd1306.setCursor(0, 0);
+    ssd1306.print("try to connect to WiFi");
+
+    ssd1306.setCursor(0, 10);
+    ssd1306.print(WiFi.SSID());
+
+    ssd1306.display();
+  };
+  WiFiSettings.onSuccess = []()
+  {
+    ssd1306.clearDisplay();
+    ssd1306.setTextSize(1);
+
+    ssd1306.setCursor(0, 0);
+    ssd1306.print("connected successfully to WiFi");
+
+    ssd1306.setCursor(0, 10);
+    ssd1306.print(WiFi.SSID());
+
+    ssd1306.display();
+  };
+  WiFiSettings.onFailure = []()
+  {
+    ssd1306.clearDisplay();
+    ssd1306.setTextSize(1);
+
+    ssd1306.setCursor(0, 0);
+    ssd1306.print("error on connecting to WiFi");
+
+    ssd1306.setCursor(0, 10);
+    ssd1306.print(WiFi.SSID());
+
+    ssd1306.display();
+  };
+
+  // Use stored credentials to connect to your WiFi access point.
+  // If no credentials are stored or if the access point is out of reach,
+  // an access point will be started with a captive portal to configure WiFi.
+  WiFiSettings.connect();
 }
 
 void setup()
@@ -223,9 +274,9 @@ void setup()
   SPIFFS.begin(true); // Will format on the first run after failing to mount
   // SPIFFS.format();    // TODO reset config on connection MQTT fail
 
+  setupDisplay();
   setupWifiSettings();
   setupWebserver();
-  setupDisplay();
   setupOta();
   setupNtp();
   setupDht();

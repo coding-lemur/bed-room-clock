@@ -70,10 +70,11 @@ Returning an JSON object with following data:
 
 ```json
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "system": {
     "deviceId": "xxyyzzz",
-    "freeHeap": 236480
+    "freeHeap": 236480,
+    "uptime": 300 // in seconds
   },
   "network": {
     "wifiRssi": -59,
