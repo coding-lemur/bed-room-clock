@@ -49,14 +49,19 @@
 
       function ApiLoader(props) {
         return {
-          info: null,
+          wifiQuality: "n.a",
+          uptime: "n.a.",
           loadData() {
-            const response = await fetch("/api/info");
-            this.info = await response.json();
+            fetch("/api/info")
+              .then((res) => res.json)
+              .then((info) => {
+                this.wifiQuality = info.network.wifiQuality;
+                this.uptime = toDaysMinutesSeconds(info.system.uptime);
+              });
           },
           mounted() {
             setTimeout(() => {
-              loadData();
+              this.loadData();
             }, 30000);
           },
         };
@@ -85,17 +90,12 @@
         <div>firmware version: <span class="value">%Version%</span></div>
         <div>
           wifi signal:
-          <span class="value"
-            >{{ info ? info.network.wifiQuality : 'n.a.' }}</span
-          >
+          <span class="value">{{ wifiQuality }}</span>
         </div>
         <div>time: <span class="value">n.a.</span></div>
         <div>
           uptime:
-          <span class="value"
-            >{{ info ? toDaysMinutesSeconds(info.system.uptime) : 'n.a.'
-            }}</span
-          >
+          <span class="value">{{ uptime }}</span>
         </div>
       </section>
     </div>
