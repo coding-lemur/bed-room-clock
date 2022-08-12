@@ -47,28 +47,22 @@
     <script type="module">
       import { createApp } from "https://unpkg.com/petite-vue?module";
 
-      function ApiLoader(props) {
-        return {
-          wifiQuality: "n.a",
-          uptime: "n.a.",
-          loadData() {
-            fetch("/api/info")
-              .then((res) => res.json)
-              .then((info) => {
-                this.wifiQuality = info.network.wifiQuality;
-                this.uptime = toDaysMinutesSeconds(info.system.uptime);
-              });
-          },
-          mounted() {
-            setTimeout(() => {
-              this.loadData();
-            }, 30000);
-          },
-        };
-      }
-
       createApp({
-        ApiLoader,
+        wifiQuality: "n.a",
+        uptime: "n.a.",
+        loadData() {
+          fetch("/api/info")
+            .then((res) => res.json())
+            .then((data) => {
+              this.wifiQuality = data.network.wifiQuality;
+              this.uptime = toDaysMinutesSeconds(data.system.uptime);
+            });
+        },
+        mounted() {
+          setTimeout(() => {
+            this.loadData();
+          }, 30000);
+        },
       }).mount();
     </script>
 
@@ -79,15 +73,12 @@
     <div class="container">
       <h1 class="mb-3">Bedroom Clock</h1>
 
-      <section
-        id="device-info"
-        class="mb-3"
-        v-scope="ApiLoader()"
-        @vue:mounted="mounted"
-      >
+      <section id="device-info" class="mb-3" v-scope @vue:mounted="mounted">
         <h2>Device Info</h2>
+
         <div>device ID: <strong class="value">%DEVICE_ID%</strong></div>
         <div>firmware version: <span class="value">%Version%</span></div>
+
         <div>
           wifi signal:
           <span class="value">{{ wifiQuality }}</span>
