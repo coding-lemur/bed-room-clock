@@ -18,6 +18,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
+#include <ESPAsyncTunnel.h>
 
 #include "config.h"
 
@@ -31,6 +32,9 @@ AsyncWebServer server(80);
 const char *ntpServer = "pool.ntp.org"; // TODO move to config
 const long gmtOffset_sec = 3600;        // TODO move to config
 const int daylightOffset_sec = 3600;    // TODO move to config
+
+const char *externalBaseUrl = "https://coding-lemur.github.io";
+const char *indexPath = "/bed-room-clock-dashboard/index.html";
 
 bool isPortalActive = false;
 float lastTemperature = -100;
@@ -117,8 +121,26 @@ StaticJsonDocument<384> getInfoJson()
 
 void setupWebserver()
 {
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(200, "text/plain", "Hi! This is a sample response."); });
+  // rewrites
+  server.rewrite("/", indexPath);
+  server.rewrite("/index.html", indexPath);
+  server.rewrite("/favicon.ico", "/bed-room-clock-dashboard/favicon.ico");
+
+  // tunnel the index.html request
+  server.on(indexPath, HTTP_GET, [&](AsyncWebServerRequest *request)
+            {
+      ClientRequestTunnel tunnel; 
+      if (tunnel.open(externalBaseUrl, request->url())) {
+          String result = tunnel.getString();
+          request->send(200, "text/html", result);          
+      } else {
+          request->send(tunnel.getHttpCode());
+      } });
+
+  server.on("/bed-room-clock-dashboard/*", HTTP_GET, [&](AsyncWebServerRequest *request)
+            {
+    String moved_url = externalBaseUrl+request->url();
+    request->redirect(moved_url); });
 
   server.on("/api/info", HTTP_GET, [](AsyncWebServerRequest *request)
             {
