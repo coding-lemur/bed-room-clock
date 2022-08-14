@@ -119,23 +119,6 @@ StaticJsonDocument<384> getInfoJson()
   return doc;
 }
 
-String processor(const String &var)
-{
-  Serial.println(var);
-
-  if (var == "DEVICE_ID")
-  {
-    return getDeviceId();
-  }
-
-  if (var == "VERSION")
-  {
-    return version;
-  }
-
-  return String();
-}
-
 void setupWebserver()
 {
   // rewrites
@@ -158,12 +141,6 @@ void setupWebserver()
             {
     String moved_url = externalBaseUrl+request->url();
     request->redirect(moved_url); });
-
-  /*server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/index.html", String(), false, processor); });*/
-
-  /*server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
-{ request->send(SPIFFS, "/style.css", "text/css"); });*/
 
   server.on("/api/info", HTTP_GET, [](AsyncWebServerRequest *request)
             {
