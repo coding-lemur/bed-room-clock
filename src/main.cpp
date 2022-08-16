@@ -3,27 +3,34 @@
 #include <Wire.h>
 #include <SPIFFS.h>
 
-#include <WiFiSettings.h>
-#include <ArduinoOTA.h>
+// sensors
 #include <NewPing.h>
 #include <DHT.h>
-#include <time.h>
-#include <ArduinoJson.h>
-#include <StreamUtils.h>
 
+// display
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_I2CDevice.h>
 
-#include <ESPmDNS.h>
+#include <WiFiSettings.h>
+#include <ArduinoOTA.h>
+#include <time.h>
+#include <ArduinoJson.h>
+#include <StreamUtils.h>
+
+// webserver
 #include <AsyncTCP.h>
+#include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
+
 #include <AsyncElegantOTA.h>
 #include <ESPAsyncTunnel.h>
+#include <ESPmDNS.h>
 
 #include "config.h"
 
 const String version = "1.3.0";
+const char *settingsFilename = "/settings.json";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
@@ -120,6 +127,65 @@ StaticJsonDocument<384> getInfoJson()
   return doc;
 }
 
+void setBrightness(uint8_t brightness)
+{
+  ssd1306.ssd1306_command(SSD1306_SETCONTRAST);
+  ssd1306.ssd1306_command(brightness); // 0-255
+}
+
+StaticJsonDocument<256> loadSettings()
+{
+  File file = SPIFFS.open(settingsFilename, FILE_READ);
+
+  StaticJsonDocument<1024> settings;
+  auto error = deserializeJson(settings, file);
+
+  file.close();
+
+  if (error)
+  {
+    Serial.println("error on deserializing 'auto-starts' file: ");
+    // Serial.println(error.code);
+  }
+
+  return settings;
+}
+
+void saveSettings(StaticJsonDocument<256> settings)
+{
+  // save into file
+  File file = SPIFFS.open(settingsFilename, FILE_WRITE);
+
+  if (serializeJson(settings, file) == 0)
+  {
+    Serial.println("error on writing 'settings.json'");
+  }
+
+  file.close();
+}
+
+void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
+{
+  StaticJsonDocument<200> data = json.as<JsonObject>();
+
+  // TODO load settings to json object
+  StaticJsonDocument<256> settings;
+
+  if (data.containsKey("brightness"))
+  {
+    byte brightness = data["brightness"].as<byte>();
+    settings["brightness"] = brightness;
+
+    saveSettings(settings);
+    setBrightness(brightness);
+
+    request->send(200);
+    return;
+  }
+
+  request->send(400); // bad request
+}
+
 void setupWebserver()
 {
   // rewrites
@@ -149,6 +215,8 @@ void setupWebserver()
         auto size = serializeJson(getInfoJson(), stream);
 
         request->send(stream, "application/json", size); });
+
+  server.addHandler(new AsyncCallbackJsonWebHandler("/settings", onChangeSettings));
 
   AsyncElegantOTA.begin(&server);
 
