@@ -15,6 +15,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_I2CDevice.h>
 
+#include <ESPmDNS.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
@@ -22,7 +23,7 @@
 
 #include "config.h"
 
-const String version = "1.2.0";
+const String version = "1.3.0";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
@@ -197,6 +198,14 @@ void setupDisplay()
   ssd1306.display();
 }
 
+void setupMDns()
+{
+  if (!MDNS.begin("bedroom-clock"))
+  {
+    Serial.println("Error starting mDNS");
+  }
+}
+
 void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 {
   WiFi.reconnect();
@@ -297,6 +306,7 @@ void setup()
   // SPIFFS.format();    // TODO reset config on connection MQTT fail
 
   setupDisplay();
+  setupMDns();
   setupWifiSettings();
   setupWebserver();
   setupOta();
