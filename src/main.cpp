@@ -41,8 +41,11 @@ const char *ntpServer = "pool.ntp.org"; // TODO move to config
 const long gmtOffset_sec = 3600;        // TODO move to config
 const int daylightOffset_sec = 3600;    // TODO move to config
 
+// TODO move to settings
 const char *externalBaseUrl = "https://coding-lemur.github.io";
 const char *indexPath = "/bed-room-clock-dashboard/index.html";
+
+StaticJsonDocument<512> settings;
 
 bool isPortalActive = false;
 float lastTemperature = -100;
@@ -57,6 +60,47 @@ unsigned long lastScreenOn = 0;
 double round2(double value)
 {
   return (int)(value * 100 + 0.5) / 100.0;
+}
+
+void resetSettings()
+{
+  settings.clear();
+
+  // set default values
+  settings["brightness"] = 255;
+}
+
+void loadSettings()
+{
+  if (!SPIFFS.exists(settingsFilename))
+  {
+    resetSettings();
+    saveSettings();
+
+    return;
+  }
+
+  File file = SPIFFS.open(settingsFilename, FILE_READ);
+  auto error = deserializeJson(settings, file);
+  file.close();
+
+  if (error)
+  {
+    Serial.println("error on deserializing 'auto-starts' file: ");
+    // Serial.println(error.code);
+  }
+}
+
+void saveSettings()
+{
+  File file = SPIFFS.open(settingsFilename, FILE_WRITE);
+
+  if (serializeJson(settings, file) == 0)
+  {
+    Serial.println("error on writing 'settings.json'");
+  }
+
+  file.close();
 }
 
 // TODO move to library
@@ -97,6 +141,7 @@ StaticJsonDocument<384> getInfoJson()
   system["deviceId"] = getDeviceId();
   system["freeHeap"] = ESP.getFreeHeap();                // in bytes
   system["uptime"] = esp_timer_get_time() / 1000 / 1000; // in seconds
+  system["brightness"] = settings["brightness"].as<byte>();
   // system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
   //   system["uptime"] = NTP.getUptimeString();
 
@@ -133,50 +178,16 @@ void setBrightness(uint8_t brightness)
   ssd1306.ssd1306_command(brightness); // 0-255
 }
 
-StaticJsonDocument<256> loadSettings()
-{
-  File file = SPIFFS.open(settingsFilename, FILE_READ);
-
-  StaticJsonDocument<1024> settings;
-  auto error = deserializeJson(settings, file);
-
-  file.close();
-
-  if (error)
-  {
-    Serial.println("error on deserializing 'auto-starts' file: ");
-    // Serial.println(error.code);
-  }
-
-  return settings;
-}
-
-void saveSettings(StaticJsonDocument<256> settings)
-{
-  // save into file
-  File file = SPIFFS.open(settingsFilename, FILE_WRITE);
-
-  if (serializeJson(settings, file) == 0)
-  {
-    Serial.println("error on writing 'settings.json'");
-  }
-
-  file.close();
-}
-
 void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
 {
   StaticJsonDocument<200> data = json.as<JsonObject>();
-
-  // TODO load settings to json object
-  StaticJsonDocument<256> settings;
 
   if (data.containsKey("brightness"))
   {
     byte brightness = data["brightness"].as<byte>();
     settings["brightness"] = brightness;
 
-    saveSettings(settings);
+    saveSettings();
     setBrightness(brightness);
 
     request->send(200);
@@ -372,6 +383,7 @@ void setup()
 
   SPIFFS.begin(true); // Will format on the first run after failing to mount
   // SPIFFS.format();    // TODO reset config on connection MQTT fail
+  loadSettings();
 
   setupDisplay();
   setupMDns();
