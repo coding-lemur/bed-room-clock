@@ -137,36 +137,34 @@ StaticJsonDocument<384> getInfoJson()
   StaticJsonDocument<384> doc;
   doc["version"] = version;
 
-  JsonObject system = doc.createNestedObject("system");
-  system["deviceId"] = getDeviceId();
-  system["freeHeap"] = ESP.getFreeHeap();                // in bytes
-  system["uptime"] = esp_timer_get_time() / 1000 / 1000; // in seconds
-  system["brightness"] = settings["brightness"].as<byte>();
-  // system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
-  //   system["uptime"] = NTP.getUptimeString();
+  JsonObject systemPart = doc.createNestedObject("system");
+  systemPart["deviceId"] = getDeviceId();
+  systemPart["freeHeap"] = ESP.getFreeHeap();                // in bytes
+  systemPart["uptime"] = esp_timer_get_time() / 1000 / 1000; // in seconds
+                                                             // system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
 
-  // JsonObject fileSystem = doc.createNestedObject("fileSystem");
-  // fileSystem["totalBytes"] = SPIFFS.totalBytes();
-  // fileSystem["usedBytes"] = SPIFFS.usedBytes();
+  JsonObject fileSystemPart = doc.createNestedObject("fileSystem");
+  fileSystemPart["totalBytes"] = SPIFFS.totalBytes();
+  fileSystemPart["usedBytes"] = SPIFFS.usedBytes();
 
-  JsonObject network = doc.createNestedObject("network");
+  JsonObject networkPart = doc.createNestedObject("network");
   int8_t rssi = WiFi.RSSI();
-  network["wifiRssi"] = rssi;
-  network["wifiQuality"] = getRssiAsQuality(rssi);
-  network["wifiSsid"] = WiFi.SSID();
-  network["ip"] = WiFi.localIP().toString();
-  network["mac"] = WiFi.macAddress();
+  networkPart["wifiRssi"] = rssi;
+  networkPart["wifiQuality"] = getRssiAsQuality(rssi);
+  networkPart["wifiSsid"] = WiFi.SSID();
+  networkPart["ip"] = WiFi.localIP().toString();
+  networkPart["mac"] = WiFi.macAddress();
 
-  JsonObject values = doc.createNestedObject("values");
+  JsonObject valuesPart = doc.createNestedObject("values");
 
   if (lastTemperature > -100)
   {
-    values["temp"] = round2(lastTemperature);
+    valuesPart["temp"] = round2(lastTemperature);
   }
 
   if (lastHumidity > -100)
   {
-    values["humidity"] = round2(lastHumidity);
+    valuesPart["humidity"] = round2(lastHumidity);
   }
 
   return doc;
@@ -227,11 +225,14 @@ void setupWebserver()
 
         request->send(stream, "application/json", size); });
 
+  server.on("/api/settings", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, settingsFilename, "application/json", false); });
+
   server.on("api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
             { 
               SPIFFS.format(); 
               ESP.restart();
-              
+
               request->send(200); });
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/settings", onChangeSettings));
