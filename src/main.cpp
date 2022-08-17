@@ -227,6 +227,13 @@ void setupWebserver()
 
         request->send(stream, "application/json", size); });
 
+  server.on("api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
+            { 
+              SPIFFS.format(); 
+              ESP.restart();
+              
+              request->send(200); });
+
   server.addHandler(new AsyncCallbackJsonWebHandler("/settings", onChangeSettings));
 
   AsyncElegantOTA.begin(&server);
