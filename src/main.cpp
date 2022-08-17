@@ -141,7 +141,8 @@ StaticJsonDocument<384> getInfoJson()
   systemPart["deviceId"] = getDeviceId();
   systemPart["freeHeap"] = ESP.getFreeHeap();                // in bytes
   systemPart["uptime"] = esp_timer_get_time() / 1000 / 1000; // in seconds
-                                                             // system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
+  // TODO add time
+  //  system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
 
   JsonObject fileSystemPart = doc.createNestedObject("fileSystem");
   fileSystemPart["totalBytes"] = SPIFFS.totalBytes();
