@@ -70,6 +70,18 @@ void resetSettings()
   settings["brightness"] = 255;
 }
 
+void saveSettings()
+{
+  File file = SPIFFS.open(settingsFilename, FILE_WRITE);
+
+  if (serializeJson(settings, file) == 0)
+  {
+    Serial.println("error on writing 'settings.json'");
+  }
+
+  file.close();
+}
+
 void loadSettings()
 {
   if (!SPIFFS.exists(settingsFilename))
@@ -89,18 +101,6 @@ void loadSettings()
     Serial.println("error on deserializing 'auto-starts' file: ");
     // Serial.println(error.code);
   }
-}
-
-void saveSettings()
-{
-  File file = SPIFFS.open(settingsFilename, FILE_WRITE);
-
-  if (serializeJson(settings, file) == 0)
-  {
-    Serial.println("error on writing 'settings.json'");
-  }
-
-  file.close();
 }
 
 // TODO move to library
