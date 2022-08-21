@@ -171,18 +171,10 @@ StaticJsonDocument<384> getInfoJson()
   return doc;
 }
 
-/***
- * @param brightness 0 - 100%
- */
-void setBrightness(byte percent)
+void setBrightness(byte value)
 {
-  uint8_t contrast = (255 * percent) / 100;
   ssd1306.ssd1306_command(SSD1306_SETCONTRAST);
-  ssd1306.ssd1306_command(contrast); // 0-255
-
-  /*uint8_t precharge = (34 * percent) / 100;
-  ssd1306.ssd1306_command(SSD1306_SETPRECHARGE);
-  ssd1306.ssd1306_command(precharge);*/
+  ssd1306.ssd1306_command(value); // 0-255
 }
 
 void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
@@ -241,10 +233,12 @@ void setupWebserver()
             {
               request->send(200);
 
-              SPIFFS.format();
+              SPIFFS.remove("/wifi-ssid");
+              SPIFFS.remove("/WiFiSettings-language");
+              SPIFFS.remove("/wifi-password");
+              SPIFFS.remove(settingsFilename);
               delay(2000);
-              ESP.restart();
-            });
+              ESP.restart(); });
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
 
