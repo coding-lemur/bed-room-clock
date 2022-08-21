@@ -236,7 +236,7 @@ void setupWebserver()
 
               request->send(200); });
 
-  server.addHandler(new AsyncCallbackJsonWebHandler("/settings", onChangeSettings));
+  server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
 
   AsyncElegantOTA.begin(&server);
 
