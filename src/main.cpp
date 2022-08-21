@@ -174,15 +174,15 @@ StaticJsonDocument<384> getInfoJson()
 /***
  * @param brightness 0 - 100%
  */
-void setBrightness(byte brightness)
+void setBrightness(byte percent)
 {
-  uint8_t contrast = (157 * brightness) / 100;
+  uint8_t contrast = (255 * percent) / 100;
   ssd1306.ssd1306_command(SSD1306_SETCONTRAST);
   ssd1306.ssd1306_command(contrast); // 0-255
 
-  uint8_t precharge = (34 * brightness) / 100;
+  /*uint8_t precharge = (34 * percent) / 100;
   ssd1306.ssd1306_command(SSD1306_SETPRECHARGE);
-  ssd1306.ssd1306_command(precharge);
+  ssd1306.ssd1306_command(precharge);*/
 }
 
 void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
@@ -239,10 +239,12 @@ void setupWebserver()
 
   server.on("api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
             {
-              SPIFFS.format();
-              ESP.restart();
+              request->send(200);
 
-              request->send(200); });
+              SPIFFS.format();
+              delay(2000);
+              ESP.restart();
+            });
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
 
