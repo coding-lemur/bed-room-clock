@@ -171,10 +171,18 @@ StaticJsonDocument<384> getInfoJson()
   return doc;
 }
 
-void setBrightness(uint8_t brightness)
+/***
+ * @param brightness 0 - 100%
+ */
+void setBrightness(byte brightness)
 {
+  uint8_t contrast = (157 * brightness) / 100;
   ssd1306.ssd1306_command(SSD1306_SETCONTRAST);
-  ssd1306.ssd1306_command(brightness); // 0-255
+  ssd1306.ssd1306_command(contrast); // 0-255
+
+  uint8_t precharge = (34 * brightness) / 100;
+  ssd1306.ssd1306_command(SSD1306_SETPRECHARGE);
+  ssd1306.ssd1306_command(precharge);
 }
 
 void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
@@ -206,10 +214,10 @@ void setupWebserver()
   // tunnel the index.html request
   server.on(indexPath, HTTP_GET, [&](AsyncWebServerRequest *request)
             {
-      ClientRequestTunnel tunnel; 
+      ClientRequestTunnel tunnel;
       if (tunnel.open(externalBaseUrl, request->url())) {
           String result = tunnel.getString();
-          request->send(200, "text/html", result);          
+          request->send(200, "text/html", result);
       } else {
           request->send(tunnel.getHttpCode());
       } });
@@ -230,8 +238,8 @@ void setupWebserver()
             { request->send(SPIFFS, settingsFilename, "application/json", false); });
 
   server.on("api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
-            { 
-              SPIFFS.format(); 
+            {
+              SPIFFS.format();
               ESP.restart();
 
               request->send(200); });
