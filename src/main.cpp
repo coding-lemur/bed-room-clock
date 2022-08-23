@@ -208,16 +208,6 @@ void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
   request->send(400); // bad request
 }
 
-void saveDelete(char *path)
-{
-  if (!SPIFFS.exists(path))
-  {
-    return;
-  }
-
-  SPIFFS.remove(path);
-}
-
 void setupWebserver()
 {
   // rewrites
@@ -255,10 +245,25 @@ void setupWebserver()
             {
               //request->send(200);
               
-              safeDelete("/wifi-ssid");
-              safeDelete("/wifi-password");
-              safeDelete("/WiFiSettings-language");
-              safeDelete(settingsFilename);
+              if (SPIFFS.exists("/wifi-ssid"))
+              {
+                SPIFFS.remove("/wifi-ssid");
+              }
+
+              if (SPIFFS.exists("/wifi-password"))
+              {
+                SPIFFS.remove("/wifi-password");
+              }
+
+              if (SPIFFS.exists("/WiFiSettings-language"))
+              {
+                SPIFFS.remove("/WiFiSettings-language");
+              }
+
+              if (SPIFFS.exists(settingsFilename))
+              {
+                SPIFFS.remove(settingsFilename);
+              }
 
               delay(2000);
               
