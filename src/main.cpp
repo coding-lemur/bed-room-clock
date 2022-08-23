@@ -255,10 +255,10 @@ void setupWebserver()
             {
               //request->send(200);
               
-              safeRemove("/wifi-ssid");
-              safeRemove("/wifi-password");
-              safeRemove("/WiFiSettings-language");
-              safeRemove(settingsFilename);
+              safeDelete("/wifi-ssid");
+              safeDelete("/wifi-password");
+              safeDelete("/WiFiSettings-language");
+              safeDelete(settingsFilename);
 
               delay(2000);
               
