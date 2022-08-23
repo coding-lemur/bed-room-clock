@@ -29,7 +29,7 @@
 
 #include "config.h"
 
-const String version = "1.3.0";
+const String version = "1.3.3";
 const char *settingsFilename = "/settings.json";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
@@ -132,6 +132,19 @@ int getRssiAsQuality(int rssi)
   return quality;
 }
 
+unsigned long getUnixTime()
+{
+  time_t now;
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo))
+  {
+    return 0;
+  }
+
+  time(&now);
+  return now; // unix time
+}
+
 StaticJsonDocument<384> getInfoJson()
 {
   StaticJsonDocument<384> doc;
@@ -141,8 +154,7 @@ StaticJsonDocument<384> getInfoJson()
   systemPart["deviceId"] = getDeviceId();
   systemPart["freeHeap"] = ESP.getFreeHeap();                // in bytes
   systemPart["uptime"] = esp_timer_get_time() / 1000 / 1000; // in seconds
-  // TODO add time
-  //  system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
+  systemPart["time"] = getUnixTime();
 
   JsonObject fileSystemPart = doc.createNestedObject("fileSystem");
   fileSystemPart["totalBytes"] = SPIFFS.totalBytes();
@@ -237,7 +249,9 @@ void setupWebserver()
               SPIFFS.remove("/WiFiSettings-language");
               SPIFFS.remove("/wifi-password");
               SPIFFS.remove(settingsFilename);
+
               delay(2000);
+              
               ESP.restart(); });
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
