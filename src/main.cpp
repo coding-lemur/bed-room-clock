@@ -325,6 +325,8 @@ void setupMDns()
   {
     Serial.println("Error starting mDNS");
   }
+
+  MDNS.addService("http", "tcp", 80);
 }
 
 void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
@@ -428,8 +430,8 @@ void setup()
   loadSettings();
 
   setupDisplay();
-  setupMDns();
   setupWifiSettings();
+  setupMDns();
   setupWebserver();
   setupOta();
   setupNtp();
