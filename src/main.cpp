@@ -243,9 +243,11 @@ void setupWebserver()
 
   server.on("api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
             {
-              //request->send(200);
+              request->send(200);
+
+              SPIFFS.format();
               
-              if (SPIFFS.exists("/wifi-ssid"))
+              /*if (SPIFFS.exists("/wifi-ssid"))
               {
                 SPIFFS.remove("/wifi-ssid");
               }
@@ -263,7 +265,7 @@ void setupWebserver()
               if (SPIFFS.exists(settingsFilename))
               {
                 SPIFFS.remove(settingsFilename);
-              }
+              }*/
 
               delay(2000);
               
