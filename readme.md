@@ -65,7 +65,7 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 
 ## API endpoint
 
-GET `/api/info`
+### GET `/api/info`
 
 Returning an JSON object with following data:
 
@@ -90,3 +90,11 @@ Returning an JSON object with following data:
   }
 }
 ```
+
+### POST `/api/restart`
+
+Restart device
+
+### POST `/api/hard-reset`
+
+Removes WIFI settings
