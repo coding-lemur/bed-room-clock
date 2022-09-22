@@ -366,13 +366,16 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("connect to WiFi and setup the device");
+    ssd1306.print("connect to WiFi and");
 
     ssd1306.setCursor(0, 10);
-    ssd1306.print(WiFiSettings.hostname);
+    ssd1306.print("setup the device");
 
     ssd1306.setCursor(0, 20);
-    ssd1306.print("password: ");
+    ssd1306.print(WiFiSettings.hostname);
+
+    ssd1306.setCursor(0, 30);
+    ssd1306.print("password:");
     ssd1306.print(PASSWORD);
 
     ssd1306.display();
@@ -391,7 +394,7 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("try to connect to WiFi");
+    ssd1306.print("connect to WiFi...");
 
     ssd1306.setCursor(0, 10);
     ssd1306.print(WiFi.SSID());
@@ -404,7 +407,7 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("connected successfully to WiFi");
+    ssd1306.print("connected to WiFi");
 
     ssd1306.setCursor(0, 10);
     ssd1306.print(WiFi.SSID());
@@ -417,7 +420,7 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("error on connecting to WiFi");
+    ssd1306.print("WiFi error ");
 
     ssd1306.setCursor(0, 10);
     ssd1306.print(WiFi.SSID());
