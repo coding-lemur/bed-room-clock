@@ -3,26 +3,34 @@
 #include <Wire.h>
 #include <SPIFFS.h>
 
-#include <WiFiSettings.h>
-#include <ArduinoOTA.h>
+// sensors
 #include <NewPing.h>
 #include <DHT.h>
-#include <time.h>
-#include <ArduinoJson.h>
-#include <StreamUtils.h>
 
+// display
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_I2CDevice.h>
 
+#include <WiFiSettings.h>
+#include <ArduinoOTA.h>
+#include <time.h>
+#include <ArduinoJson.h>
+#include <StreamUtils.h>
+
+// webserver
 #include <AsyncTCP.h>
+#include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
+
 #include <AsyncElegantOTA.h>
 #include <ESPAsyncTunnel.h>
+#include <ESPmDNS.h>
 
 #include "config.h"
 
-const String version = "1.2.0";
+const String version = "1.3.3";
+const char *settingsFilename = "/settings.json";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
@@ -33,8 +41,11 @@ const char *ntpServer = "pool.ntp.org"; // TODO move to config
 const long gmtOffset_sec = 3600;        // TODO move to config
 const int daylightOffset_sec = 3600;    // TODO move to config
 
+// TODO move to settings
 const char *externalBaseUrl = "https://coding-lemur.github.io";
 const char *indexPath = "/bed-room-clock-dashboard/index.html";
+
+StaticJsonDocument<512> settings;
 
 bool isPortalActive = false;
 float lastTemperature = -100;
@@ -49,6 +60,47 @@ unsigned long lastScreenOn = 0;
 double round2(double value)
 {
   return (int)(value * 100 + 0.5) / 100.0;
+}
+
+void resetSettings()
+{
+  settings.clear();
+
+  // set default values
+  settings["brightness"] = 255;
+}
+
+void saveSettings()
+{
+  File file = SPIFFS.open(settingsFilename, FILE_WRITE);
+
+  if (serializeJson(settings, file) == 0)
+  {
+    Serial.println("error on writing 'settings.json'");
+  }
+
+  file.close();
+}
+
+void loadSettings()
+{
+  if (!SPIFFS.exists(settingsFilename))
+  {
+    resetSettings();
+    saveSettings();
+
+    return;
+  }
+
+  File file = SPIFFS.open(settingsFilename, FILE_READ);
+  auto error = deserializeJson(settings, file);
+  file.close();
+
+  if (error)
+  {
+    Serial.println("error on deserializing 'auto-starts' file: ");
+    // Serial.println(error.code);
+  }
 }
 
 // TODO move to library
@@ -80,43 +132,80 @@ int getRssiAsQuality(int rssi)
   return quality;
 }
 
+unsigned long getUnixTime()
+{
+  time_t now;
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo))
+  {
+    return 0;
+  }
+
+  time(&now);
+  return now; // unix time
+}
+
 StaticJsonDocument<384> getInfoJson()
 {
   StaticJsonDocument<384> doc;
   doc["version"] = version;
 
-  JsonObject system = doc.createNestedObject("system");
-  system["deviceId"] = getDeviceId();
-  system["freeHeap"] = ESP.getFreeHeap();                // in bytes
-  system["uptime"] = esp_timer_get_time() / 1000 / 1000; // in seconds
-  // system["time"] = NTP.getTimeDateStringForJS(); // getFormatedRtcNow();
-  //   system["uptime"] = NTP.getUptimeString();
+  JsonObject systemPart = doc.createNestedObject("system");
+  systemPart["deviceId"] = getDeviceId();
+  systemPart["freeHeap"] = ESP.getFreeHeap();                // in bytes
+  systemPart["uptime"] = esp_timer_get_time() / 1000 / 1000; // in seconds
+  systemPart["time"] = getUnixTime();
 
-  // JsonObject fileSystem = doc.createNestedObject("fileSystem");
-  // fileSystem["totalBytes"] = SPIFFS.totalBytes();
-  // fileSystem["usedBytes"] = SPIFFS.usedBytes();
+  JsonObject fileSystemPart = doc.createNestedObject("fileSystem");
+  fileSystemPart["totalBytes"] = SPIFFS.totalBytes();
+  fileSystemPart["usedBytes"] = SPIFFS.usedBytes();
 
-  JsonObject network = doc.createNestedObject("network");
+  JsonObject networkPart = doc.createNestedObject("network");
   int8_t rssi = WiFi.RSSI();
-  network["wifiRssi"] = rssi;
-  network["wifiQuality"] = getRssiAsQuality(rssi);
-  network["wifiSsid"] = WiFi.SSID();
-  network["ip"] = WiFi.localIP().toString();
-  network["mac"] = WiFi.macAddress();
+  networkPart["wifiRssi"] = rssi;
+  networkPart["wifiQuality"] = getRssiAsQuality(rssi);
+  networkPart["wifiSsid"] = WiFi.SSID();
+  networkPart["ip"] = WiFi.localIP().toString();
+  networkPart["mac"] = WiFi.macAddress();
 
-  JsonObject values = doc.createNestedObject("values");
+  JsonObject valuesPart = doc.createNestedObject("values");
 
   if (lastTemperature > -100)
   {
-    values["temp"] = round2(lastTemperature);
+    valuesPart["temp"] = round2(lastTemperature);
   }
 
   if (lastHumidity > -100)
   {
-    values["humidity"] = round2(lastHumidity);
+    valuesPart["humidity"] = round2(lastHumidity);
   }
 
   return doc;
+}
+
+void setBrightness(byte value)
+{
+  ssd1306.ssd1306_command(SSD1306_SETCONTRAST);
+  ssd1306.ssd1306_command(value); // 0-255
+}
+
+void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
+{
+  StaticJsonDocument<200> data = json.as<JsonObject>();
+
+  if (data.containsKey("brightness"))
+  {
+    byte brightness = data["brightness"].as<byte>();
+    settings["brightness"] = brightness;
+
+    saveSettings();
+    setBrightness(brightness);
+
+    request->send(200);
+    return;
+  }
+
+  request->send(400); // bad request
 }
 
 void setupWebserver()
@@ -129,10 +218,10 @@ void setupWebserver()
   // tunnel the index.html request
   server.on(indexPath, HTTP_GET, [&](AsyncWebServerRequest *request)
             {
-      ClientRequestTunnel tunnel; 
+      ClientRequestTunnel tunnel;
       if (tunnel.open(externalBaseUrl, request->url())) {
           String result = tunnel.getString();
-          request->send(200, "text/html", result);          
+          request->send(200, "text/html", result);
       } else {
           request->send(tunnel.getHttpCode());
       } });
@@ -148,6 +237,50 @@ void setupWebserver()
         auto size = serializeJson(getInfoJson(), stream);
 
         request->send(stream, "application/json", size); });
+
+  server.on("/api/settings", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, settingsFilename, "application/json", false); });
+
+  server.on("/api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+              //SPIFFS.remove("/wifi-ssid");
+              //SPIFFS.remove("/wifi-password");
+
+              //SPIFFS.format();
+              
+              if (SPIFFS.exists("/wifi-ssid"))
+              {
+                SPIFFS.remove("/wifi-ssid");
+              }
+
+              request->send(200);
+
+              delay(1000);
+              ESP.restart();
+
+              /*if (SPIFFS.exists("/wifi-password"))
+              {
+                SPIFFS.remove("/wifi-password");
+              }
+
+              if (SPIFFS.exists("/WiFiSettings-language"))
+              {
+                SPIFFS.remove("/WiFiSettings-language");
+              }
+
+              if (SPIFFS.exists(settingsFilename))
+              {
+                SPIFFS.remove(settingsFilename);
+              }*/ });
+
+  server.on("/api/restart", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+              request->send(200);
+              delay(1000);
+              ESP.restart(); });
+
+  server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
+  // server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", handleHardReset));
 
   AsyncElegantOTA.begin(&server);
 
@@ -197,6 +330,16 @@ void setupDisplay()
   ssd1306.display();
 }
 
+void setupMDns()
+{
+  if (!MDNS.begin("bedroom-clock"))
+  {
+    Serial.println("Error starting mDNS");
+  }
+
+  MDNS.addService("http", "tcp", 80);
+}
+
 void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 {
   WiFi.reconnect();
@@ -223,13 +366,16 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("connect to WiFi and setup the device");
+    ssd1306.print("connect to WiFi and");
 
     ssd1306.setCursor(0, 10);
+    ssd1306.print("setup the device");
+
+    ssd1306.setCursor(0, 30);
     ssd1306.print(WiFiSettings.hostname);
 
-    ssd1306.setCursor(0, 20);
-    ssd1306.print("password: ");
+    ssd1306.setCursor(0, 40);
+    ssd1306.print("password:");
     ssd1306.print(PASSWORD);
 
     ssd1306.display();
@@ -248,7 +394,7 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("try to connect to WiFi");
+    ssd1306.print("connect to WiFi...");
 
     ssd1306.setCursor(0, 10);
     ssd1306.print(WiFi.SSID());
@@ -261,7 +407,7 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("connected successfully to WiFi");
+    ssd1306.print("connected to WiFi");
 
     ssd1306.setCursor(0, 10);
     ssd1306.print(WiFi.SSID());
@@ -274,7 +420,7 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("error on connecting to WiFi");
+    ssd1306.print("WiFi error ");
 
     ssd1306.setCursor(0, 10);
     ssd1306.print(WiFi.SSID());
@@ -295,9 +441,11 @@ void setup()
 
   SPIFFS.begin(true); // Will format on the first run after failing to mount
   // SPIFFS.format();    // TODO reset config on connection MQTT fail
+  loadSettings();
 
   setupDisplay();
   setupWifiSettings();
+  setupMDns();
   setupWebserver();
   setupOta();
   setupNtp();
