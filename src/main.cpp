@@ -241,18 +241,24 @@ void setupWebserver()
   server.on("/api/settings", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, settingsFilename, "application/json", false); });
 
-  server.on("api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
+  server.on("/api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
             {
-              request->send(200);
+              //SPIFFS.remove("/wifi-ssid");
+              //SPIFFS.remove("/wifi-password");
 
-              SPIFFS.format();
+              //SPIFFS.format();
               
-              /*if (SPIFFS.exists("/wifi-ssid"))
+              if (SPIFFS.exists("/wifi-ssid"))
               {
                 SPIFFS.remove("/wifi-ssid");
               }
 
-              if (SPIFFS.exists("/wifi-password"))
+              request->send(200);
+
+              delay(1000);
+              ESP.restart();
+
+              /*if (SPIFFS.exists("/wifi-password"))
               {
                 SPIFFS.remove("/wifi-password");
               }
@@ -265,13 +271,16 @@ void setupWebserver()
               if (SPIFFS.exists(settingsFilename))
               {
                 SPIFFS.remove(settingsFilename);
-              }*/
+              }*/ });
 
-              delay(2000);
-              
+  server.on("/api/restart", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+              request->send(200);
+              delay(1000);
               ESP.restart(); });
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
+  // server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", handleHardReset));
 
   AsyncElegantOTA.begin(&server);
 
