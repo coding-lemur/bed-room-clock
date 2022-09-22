@@ -371,10 +371,10 @@ void setupWifiSettings()
     ssd1306.setCursor(0, 10);
     ssd1306.print("setup the device");
 
-    ssd1306.setCursor(0, 20);
+    ssd1306.setCursor(0, 30);
     ssd1306.print(WiFiSettings.hostname);
 
-    ssd1306.setCursor(0, 30);
+    ssd1306.setCursor(0, 40);
     ssd1306.print("password:");
     ssd1306.print(PASSWORD);
 
