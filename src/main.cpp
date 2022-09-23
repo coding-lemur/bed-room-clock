@@ -29,7 +29,7 @@
 
 #include "config.h"
 
-const String version = "1.3.3";
+const String version = "1.3.4";
 const char *settingsFilename = "/settings.json";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
@@ -243,44 +243,20 @@ void setupWebserver()
 
   server.on("/api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
             {
-              //SPIFFS.remove("/wifi-ssid");
-              //SPIFFS.remove("/wifi-password");
-
-              //SPIFFS.format();
-              
-              if (SPIFFS.exists("/wifi-ssid"))
-              {
-                SPIFFS.remove("/wifi-ssid");
-              }
-
               request->send(200);
 
+              SPIFFS.format();
               delay(1000);
-              ESP.restart();
-
-              /*if (SPIFFS.exists("/wifi-password"))
-              {
-                SPIFFS.remove("/wifi-password");
-              }
-
-              if (SPIFFS.exists("/WiFiSettings-language"))
-              {
-                SPIFFS.remove("/WiFiSettings-language");
-              }
-
-              if (SPIFFS.exists(settingsFilename))
-              {
-                SPIFFS.remove(settingsFilename);
-              }*/ });
+              ESP.restart(); });
 
   server.on("/api/restart", HTTP_POST, [](AsyncWebServerRequest *request)
             {
               request->send(200);
+
               delay(1000);
               ESP.restart(); });
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
-  // server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", handleHardReset));
 
   AsyncElegantOTA.begin(&server);
 
@@ -394,7 +370,7 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("connect to WiFi...");
+    ssd1306.print("connecting to WiFi...");
 
     ssd1306.setCursor(0, 10);
     ssd1306.print(WiFi.SSID());
@@ -407,7 +383,7 @@ void setupWifiSettings()
     ssd1306.setTextSize(1);
 
     ssd1306.setCursor(0, 0);
-    ssd1306.print("connected to WiFi");
+    ssd1306.print("WiFi connected");
 
     ssd1306.setCursor(0, 10);
     ssd1306.print(WiFi.SSID());

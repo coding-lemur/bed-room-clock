@@ -97,4 +97,4 @@ Restart device
 
 ### POST `/api/hard-reset`
 
-Removes WIFI settings
+Removes all files (settings) from the device. Need setup for connecting to the WiFi
