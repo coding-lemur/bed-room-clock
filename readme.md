@@ -95,6 +95,28 @@ Returning an JSON object with following data:
 }
 ```
 
+### Get settings
+
+```http
+GET /api/settings
+```
+
+Return the settings.json
+
+### Change settings
+
+```http
+POST /api/settings
+```
+
+Change settings.
+Send payload as JSON in body.
+
+| field            | type             | description                                                                                                   |
+| ---------------- | ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| brightness       | number (0 - 255) | The brightness of the display.                                                                                |
+| screenOnDistance | number           | Specifies the distance from the ultrasonic sensor in centimeters from when the display should be switched on. |
+
 ### Restart device
 
 ```http

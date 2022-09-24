@@ -29,7 +29,7 @@
 
 #include "config.h"
 
-const String version = "1.3.4";
+const String version = "1.4.0";
 const char *settingsFilename = "/settings.json";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
@@ -62,12 +62,23 @@ double round2(double value)
   return (int)(value * 100 + 0.5) / 100.0;
 }
 
+void setDefaultSettings()
+{
+  if (!settings.containsKey("brightness"))
+  {
+    settings["brightness"] = 255;
+  }
+
+  if (!settings.containsKey("screenOnDistance"))
+  {
+    settings["screenOnDistance"] = 18;
+  }
+}
+
 void resetSettings()
 {
   settings.clear();
-
-  // set default values
-  settings["brightness"] = 255;
+  setDefaultSettings();
 }
 
 void saveSettings()
@@ -88,7 +99,6 @@ void loadSettings()
   {
     resetSettings();
     saveSettings();
-
     return;
   }
 
@@ -99,8 +109,14 @@ void loadSettings()
   if (error)
   {
     Serial.println("error on deserializing 'auto-starts' file: ");
-    // Serial.println(error.code);
+    return;
   }
+
+  // handle missing values
+  setDefaultSettings();
+
+  byte brightness = settings["brightness"].as<byte>();
+  setBrightness(brightness);
 }
 
 // TODO move to library
@@ -193,14 +209,29 @@ void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
 {
   StaticJsonDocument<200> data = json.as<JsonObject>();
 
+  bool isDirty = false;
+
   if (data.containsKey("brightness"))
   {
     byte brightness = data["brightness"].as<byte>();
     settings["brightness"] = brightness;
 
-    saveSettings();
     setBrightness(brightness);
 
+    isDirty = true;
+  }
+
+  if (data.containsKey("screenOnDistance"))
+  {
+    byte screenOnDistance = data["screenOnDistance"].as<byte>();
+    settings["screenOnDistance"] = screenOnDistance;
+
+    isDirty = true;
+  }
+
+  if (isDirty)
+  {
+    saveSettings();
     request->send(200);
     return;
   }
@@ -417,6 +448,7 @@ void setup()
 
   SPIFFS.begin(true); // Will format on the first run after failing to mount
   // SPIFFS.format();    // TODO reset config on connection MQTT fail
+
   loadSettings();
 
   setupDisplay();
@@ -450,7 +482,8 @@ void loop()
   }
 
   unsigned long lastDistance = sonar.ping_cm();
-  if (lastDistance > 0 && lastDistance <= SCREEN_ON_DISTANCE)
+  byte screenOnDistance = settings["screenOnDistance"].as<byte>();
+  if (lastDistance > 0 && lastDistance <= screenOnDistance)
   {
     // turn on display
     lastScreenOn = millis();
