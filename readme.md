@@ -124,7 +124,7 @@ Send payload as JSON in body.
 POST /api/restart
 ```
 
-### Hard reset
+### Factory reset
 
 ```http
 POST /api/hard-reset
