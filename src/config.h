@@ -4,9 +4,6 @@
 #define SCREEN_HEIGHT 64            // OLED display height, in pixels
 #define SCREEN_UPDATE_INTERVAL 1000 // in milliseconds
 
-// TODO move to settings
-#define SCREEN_ON_INTERVAL 8 * 1000 // in milliseconds
-
 #define OLED_MOSI 13
 #define OLED_CLK 14
 #define OLED_DC 16

@@ -71,7 +71,12 @@ void setDefaultSettings()
 
   if (!settings.containsKey("screenOnDistance"))
   {
-    settings["screenOnDistance"] = 18;
+    settings["screenOnDistance"] = 18; // in cm
+  }
+
+  if (!settings.containsKey("screenOnInterval"))
+  {
+    settings["screenOnInterval"] = 8 * 1000; // in ms
   }
 }
 
@@ -225,6 +230,14 @@ void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
   {
     byte screenOnDistance = data["screenOnDistance"].as<byte>();
     settings["screenOnDistance"] = screenOnDistance;
+
+    isDirty = true;
+  }
+
+  if (data.containsKey("screenOnInterval"))
+  {
+    unsigned long screenOnInterval = data["screenOnInterval"].as<unsigned long>();
+    settings["screenOnInterval"] = screenOnInterval;
 
     isDirty = true;
   }
@@ -489,7 +502,8 @@ void loop()
     lastScreenOn = millis();
   }
 
-  bool isDisplayOff = millis() - lastScreenOn >= SCREEN_ON_INTERVAL;
+  unsigned long screenOnInterval = settings["screenOnInterval"].as<unsigned long>();
+  bool isDisplayOff = millis() - lastScreenOn >= screenOnInterval;
   bool shouldUpdateScreen = millis() - lastDisplayUpdate >= SCREEN_UPDATE_INTERVAL;
 
   // turn on/off screen
