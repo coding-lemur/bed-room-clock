@@ -65,7 +65,11 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 
 ## API endpoint
 
-### GET `/api/info`
+### Get info
+
+```http
+GET /api/info
+```
 
 Returning an JSON object with following data:
 
@@ -75,7 +79,7 @@ Returning an JSON object with following data:
   "system": {
     "deviceId": "xxyyzzz",
     "freeHeap": 236480,
-    "uptime": 300 // in seconds
+    "uptime": 300
   },
   "network": {
     "wifiRssi": -59,
@@ -91,10 +95,18 @@ Returning an JSON object with following data:
 }
 ```
 
-### POST `/api/restart`
+### Restart device
 
-Restart device
+```http
+POST /api/restart
+```
 
-### POST `/api/hard-reset`
+### Hard reset
 
-Removes all files (settings) from the device. Need setup for connecting to the WiFi
+```http
+POST /api/hard-reset
+```
+
+Reset device to factory settings.
+
+**Warning**: all files (~settings) will removed from the device. Need setup for connecting to your WiFi.
