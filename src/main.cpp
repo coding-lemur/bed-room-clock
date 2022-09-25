@@ -30,16 +30,15 @@
 #include "config.h"
 
 const String version = "1.4.0";
-const char *settingsFilename = "/settings.json";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 DHT dht(DHT_PIN, DHT_TYPE);
 AsyncWebServer server(80);
 
-const char *ntpServer = "pool.ntp.org"; // TODO move to config
-const long gmtOffset_sec = 3600;        // TODO move to config
-const int daylightOffset_sec = 3600;    // TODO move to config
+const char *ntpServer = "pool.ntp.org"; // TODO move to settings
+const long gmtOffset_sec = 3600;        // TODO move to settings
+const int daylightOffset_sec = 3600;    // TODO move to settings
 
 // TODO move to settings
 const char *externalBaseUrl = "https://coding-lemur.github.io";
@@ -66,6 +65,12 @@ double round2(double value)
   return (int)(value * 100 + 0.5) / 100.0;
 }
 
+void setBrightness()
+{
+  ssd1306.ssd1306_command(SSD1306_SETCONTRAST);
+  ssd1306.ssd1306_command(brightness); // 0-255
+}
+
 void saveSettings()
 {
   StaticJsonDocument<384> settings;
@@ -73,7 +78,7 @@ void saveSettings()
   settings["screenOnDistance"] = screenOnDistance;
   settings["screenOnInterval"] = screenOnInterval;
 
-  File file = SPIFFS.open(settingsFilename, FILE_WRITE);
+  File file = SPIFFS.open(SETTINGS_FILENAME, FILE_WRITE);
 
   if (serializeJson(settings, file) == 0)
   {
@@ -85,12 +90,12 @@ void saveSettings()
 
 void loadSettings()
 {
-  if (!SPIFFS.exists(settingsFilename))
+  if (!SPIFFS.exists(SETTINGS_FILENAME))
   {
     return;
   }
 
-  File file = SPIFFS.open(settingsFilename, FILE_READ);
+  File file = SPIFFS.open(SETTINGS_FILENAME, FILE_READ);
   StaticJsonDocument<384> settings;
   auto error = deserializeJson(settings, file);
   file.close();
@@ -200,12 +205,6 @@ StaticJsonDocument<384> getInfoJson()
   return doc;
 }
 
-void setBrightness()
-{
-  ssd1306.ssd1306_command(SSD1306_SETCONTRAST);
-  ssd1306.ssd1306_command(brightness); // 0-255
-}
-
 void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
 {
   StaticJsonDocument<200> data = json.as<JsonObject>();
@@ -275,7 +274,7 @@ void setupWebserver()
         request->send(stream, "application/json", size); });
 
   server.on("/api/settings", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, settingsFilename, "application/json", false); });
+            { request->send(SPIFFS, SETTINGS_FILENAME, "application/json", false); });
 
   server.on("/api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
             {
@@ -487,14 +486,12 @@ void loop()
   }
 
   unsigned long lastDistance = sonar.ping_cm();
-  byte screenOnDistance = settings["screenOnDistance"].as<byte>();
   if (lastDistance > 0 && lastDistance <= screenOnDistance)
   {
     // turn on display
     lastScreenOn = millis();
   }
 
-  unsigned long screenOnInterval = settings["screenOnInterval"].as<unsigned long>();
   bool isDisplayOff = millis() - lastScreenOn >= screenOnInterval;
   bool shouldUpdateScreen = millis() - lastDisplayUpdate >= SCREEN_UPDATE_INTERVAL;
 
