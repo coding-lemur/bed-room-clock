@@ -92,6 +92,7 @@ void loadSettings()
 {
   if (!SPIFFS.exists(SETTINGS_FILENAME))
   {
+    saveSettings();
     return;
   }
 
