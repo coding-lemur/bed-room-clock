@@ -92,7 +92,6 @@ void loadSettings()
 {
   if (!SPIFFS.exists(SETTINGS_FILENAME))
   {
-    saveSettings();
     return;
   }
 
@@ -107,19 +106,38 @@ void loadSettings()
     return;
   }
 
+  bool hasMissingFields = false;
+
   if (settings.containsKey("brightness"))
   {
     brightness = settings["brightness"].as<byte>();
+  }
+  else
+  {
+    hasMissingFields = true;
   }
 
   if (settings.containsKey("screenOnDistance"))
   {
     screenOnDistance = settings["screenOnDistance"].as<byte>();
   }
+  else
+  {
+    hasMissingFields = true;
+  }
 
   if (settings.containsKey("screenOnInterval"))
   {
     screenOnInterval = settings["screenOnInterval"].as<unsigned long>();
+  }
+  else
+  {
+    hasMissingFields = true;
+  }
+
+  if (hasMissingFields)
+  {
+    saveSettings();
   }
 
   setBrightness();
