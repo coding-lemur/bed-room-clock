@@ -45,49 +45,34 @@ const int daylightOffset_sec = 3600;    // TODO move to config
 const char *externalBaseUrl = "https://coding-lemur.github.io";
 const char *indexPath = "/bed-room-clock-dashboard/index.html";
 
-StaticJsonDocument<512> settings;
-
 bool isPortalActive = false;
 float lastTemperature = -100;
 float lastHumidity = -100;
 bool isTimeColonVisible = true;
+
+// settings
+byte brightness = 255;
+byte screenOnDistance = 18;                // in cm
+unsigned long screenOnInterval = 8 * 1000; // in ms
 
 unsigned long lastDisplayUpdate = 0;
 unsigned long lastDhtUpdate = 0;
 unsigned long lastDistanceUpdate = 0;
 unsigned long lastScreenOn = 0;
 
+// TODO move to library
 double round2(double value)
 {
   return (int)(value * 100 + 0.5) / 100.0;
 }
 
-void setDefaultSettings()
-{
-  if (!settings.containsKey("brightness"))
-  {
-    settings["brightness"] = 255;
-  }
-
-  if (!settings.containsKey("screenOnDistance"))
-  {
-    settings["screenOnDistance"] = 18; // in cm
-  }
-
-  if (!settings.containsKey("screenOnInterval"))
-  {
-    settings["screenOnInterval"] = 8 * 1000; // in ms
-  }
-}
-
-void resetSettings()
-{
-  settings.clear();
-  setDefaultSettings();
-}
-
 void saveSettings()
 {
+  StaticJsonDocument<384> settings;
+  settings["brightness"] = brightness;
+  settings["screenOnDistance"] = screenOnDistance;
+  settings["screenOnInterval"] = screenOnInterval;
+
   File file = SPIFFS.open(settingsFilename, FILE_WRITE);
 
   if (serializeJson(settings, file) == 0)
@@ -102,12 +87,11 @@ void loadSettings()
 {
   if (!SPIFFS.exists(settingsFilename))
   {
-    resetSettings();
-    saveSettings();
     return;
   }
 
   File file = SPIFFS.open(settingsFilename, FILE_READ);
+  StaticJsonDocument<384> settings;
   auto error = deserializeJson(settings, file);
   file.close();
 
@@ -117,11 +101,22 @@ void loadSettings()
     return;
   }
 
-  // handle missing values
-  setDefaultSettings();
+  if (settings.containsKey("brightness"))
+  {
+    brightness = settings["brightness"].as<byte>();
+  }
 
-  byte brightness = settings["brightness"].as<byte>();
-  setBrightness(brightness);
+  if (settings.containsKey("screenOnDistance"))
+  {
+    screenOnDistance = settings["screenOnDistance"].as<byte>();
+  }
+
+  if (settings.containsKey("screenOnInterval"))
+  {
+    screenOnInterval = settings["screenOnInterval"].as<unsigned long>();
+  }
+
+  setBrightness();
 }
 
 // TODO move to library
@@ -153,6 +148,7 @@ int getRssiAsQuality(int rssi)
   return quality;
 }
 
+// TODO move to library
 unsigned long getUnixTime()
 {
   time_t now;
@@ -204,10 +200,10 @@ StaticJsonDocument<384> getInfoJson()
   return doc;
 }
 
-void setBrightness(byte value)
+void setBrightness()
 {
   ssd1306.ssd1306_command(SSD1306_SETCONTRAST);
-  ssd1306.ssd1306_command(value); // 0-255
+  ssd1306.ssd1306_command(brightness); // 0-255
 }
 
 void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
@@ -218,26 +214,22 @@ void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
 
   if (data.containsKey("brightness"))
   {
-    byte brightness = data["brightness"].as<byte>();
-    settings["brightness"] = brightness;
-
-    setBrightness(brightness);
+    brightness = data["brightness"].as<byte>();
+    setBrightness();
 
     isDirty = true;
   }
 
   if (data.containsKey("screenOnDistance"))
   {
-    byte screenOnDistance = data["screenOnDistance"].as<byte>();
-    settings["screenOnDistance"] = screenOnDistance;
+    screenOnDistance = data["screenOnDistance"].as<byte>();
 
     isDirty = true;
   }
 
   if (data.containsKey("screenOnInterval"))
   {
-    unsigned long screenOnInterval = data["screenOnInterval"].as<unsigned long>();
-    settings["screenOnInterval"] = screenOnInterval;
+    screenOnInterval = data["screenOnInterval"].as<unsigned long>();
 
     isDirty = true;
   }
