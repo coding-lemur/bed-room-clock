@@ -3,8 +3,6 @@
 #define SCREEN_WIDTH 128            // OLED display width, in pixels
 #define SCREEN_HEIGHT 64            // OLED display height, in pixels
 #define SCREEN_UPDATE_INTERVAL 1000 // in milliseconds
-#define SCREEN_ON_DISTANCE 18       // in cm
-#define SCREEN_ON_INTERVAL 8 * 1000 // in milliseconds
 
 #define OLED_MOSI 13
 #define OLED_CLK 14
@@ -16,3 +14,5 @@
 //#define DHT_TYPE DHT11   // DHT 11
 #define DHT_TYPE DHT22                // DHT 22  (AM2302), AM2321
 #define DHT_UPDATE_INTERVAL 20 * 1000 // in milliseconds
+
+#define SETTINGS_FILENAME "/settings.json"
