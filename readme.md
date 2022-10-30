@@ -63,7 +63,13 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 | 3             |             | -               |
 | 4             |             | GND             |
 
-## API endpoint
+## Timezone configuration
+
+First change variable `timeZone` to your timezone. See [timezone list](https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv) for the correct value.
+
+Later I will include this setting also to the dashboard.
+
+## REST API endpoint
 
 ### Get info
 
