@@ -29,7 +29,7 @@
 
 #include "config.h"
 
-const String version = "1.4.0";
+const String version = "1.4.1";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
@@ -37,8 +37,7 @@ DHT dht(DHT_PIN, DHT_TYPE);
 AsyncWebServer server(80);
 
 const char *ntpServer = "pool.ntp.org"; // TODO move to settings
-const long gmtOffset_sec = 3600;        // TODO move to settings
-const int daylightOffset_sec = 3600;    // TODO move to settings
+const char *timeZone = "CET-1CEST,M3.5.0,M10.5.0/3";
 
 // TODO move to settings
 const char *externalBaseUrl = "https://coding-lemur.github.io";
@@ -379,7 +378,6 @@ void setupWebserver()
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
 
   AsyncElegantOTA.begin(&server);
-
   server.begin();
 }
 
@@ -390,7 +388,7 @@ void setupDht()
 
 void setupNtp()
 {
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  configTzTime(timeZone, ntpServer);
 }
 
 // Start ArduinoOTA via WiFiSettings with the same hostname and password
