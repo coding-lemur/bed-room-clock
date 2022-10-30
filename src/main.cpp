@@ -36,8 +36,8 @@ Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_
 DHT dht(DHT_PIN, DHT_TYPE);
 AsyncWebServer server(80);
 
-const char *ntpServer = "pool.ntp.org"; // TODO move to settings
-const char *timeZone = "CET-1CEST,M3.5.0,M10.5.0/3";
+const char *ntpServer = "pool.ntp.org";              // TODO move to settings
+const char *timeZone = "CET-1CEST,M3.5.0,M10.5.0/3"; // TODO move to settings
 
 // TODO move to settings
 const char *externalBaseUrl = "https://coding-lemur.github.io";
