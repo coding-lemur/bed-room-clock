@@ -27,6 +27,10 @@
 #include <ESPAsyncTunnel.h>
 #include <ESPmDNS.h>
 
+#include "AudioTools.h"
+// #include "AudioCodecs/CodecMP3MAD.h"
+#include "AudioCodecs/CodecMP3Helix.h"
+
 #include "config.h"
 
 const String version = "1.4.1";
@@ -42,6 +46,16 @@ const char *timeZone = "CET-1CEST,M3.5.0,M10.5.0/3"; // TODO move to settings
 // TODO move to settings
 const char *externalBaseUrl = "https://coding-lemur.github.io";
 const char *indexPath = "/bed-room-clock-dashboard/index.html";
+
+// TODO move to settings
+const char *streamUrls[] = {"http://www.radioeins.de/livemp3"};
+
+I2SStream i2s;
+MP3DecoderHelix decoder;
+// MP3DecoderMAD decoder;
+URLStream urlStream(DEFAULT_BUFFER_SIZE);
+AudioSourceURL source(urlStream, streamUrls, "audio/mp3");
+AudioPlayer player(source, i2s, decoder);
 
 bool isPortalActive = false;
 float lastTemperature = -100;
@@ -538,6 +552,21 @@ void setupWifiSettings()
   WiFiSettings.connect();
 }
 
+void setupAudio()
+{
+  auto config = i2s.defaultConfig(TX_MODE);
+  // you could define e.g your pins and change other settings
+  config.pin_ws = GPIO_NUM_25;   // => LRC
+  config.pin_bck = GPIO_NUM_26;  // => BCLK
+  config.pin_data = GPIO_NUM_22; // => DIN
+  // config.mode = I2S_STD_FORMAT;
+
+  i2s.begin(config);
+
+  // player.begin();
+  player.setVolume(0.5);
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -549,13 +578,13 @@ void setup()
   loadSettings();
 
   setupDisplay();
-  setupMDns();
   setupWifiSettings();
   setupMDns();
   setupWebserver();
   setupOta();
   setupNtp();
   setupDht();
+  setupAudio();
 }
 
 void loop()
@@ -633,4 +662,6 @@ void loop()
 
     lastDisplayUpdate = millis();
   }
+
+  player.copy();
 }
