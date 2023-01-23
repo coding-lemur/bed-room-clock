@@ -23,7 +23,6 @@
 #include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
 
-#include <AsyncElegantOTA.h>
 #include <ESPAsyncTunnel.h>
 #include <ESPmDNS.h>
 
@@ -391,7 +390,6 @@ void setupWebserver()
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
 
-  AsyncElegantOTA.begin(&server);
   server.begin();
 }
 
@@ -563,7 +561,7 @@ void setupAudio()
 
   i2s.begin(config);
 
-  // player.begin();
+  player.begin();
   player.setVolume(0.5);
 }
 
