@@ -342,6 +342,64 @@ void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
   request->send(400); // bad request
 }
 
+void onStartPlayer(AsyncWebServerRequest *request, JsonVariant &json)
+{
+  StaticJsonDocument<200> data = json.as<JsonObject>();
+
+  bool isDirty = false;
+
+  if (data.containsKey("source"))
+  {
+    const char *sourceUrl = data["source"].as<char *>();
+    const char *streamUrls[] = {sourceUrl};
+    AudioSourceURL source(urlStream, streamUrls, "audio/mp3");
+
+    player.setAudioSource(source);
+    player.play();
+
+    isDirty = true;
+  }
+
+  if (data.containsKey("volume"))
+  {
+    const float volume = data["volume"].as<float>();
+    player.setVolume(volume);
+
+    isDirty = true;
+  }
+
+  if (isDirty)
+  {
+    request->send(200);
+    return;
+  }
+
+  request->send(400); // bad request
+}
+
+void onChangeVolume(AsyncWebServerRequest *request, JsonVariant &json)
+{
+  StaticJsonDocument<200> data = json.as<JsonObject>();
+
+  bool isDirty = false;
+
+  if (data.containsKey("volume"))
+  {
+    const float volume = data["volume"].as<float>();
+    player.setVolume(volume);
+
+    isDirty = true;
+  }
+
+  if (isDirty)
+  {
+    request->send(200);
+    return;
+  }
+
+  request->send(400); // bad request
+}
+
 void setupWebserver()
 {
   // rewrites
@@ -391,6 +449,16 @@ void setupWebserver()
               ESP.restart(); });
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
+
+  // player stuff
+  server.addHandler(new AsyncCallbackJsonWebHandler("/api/player/start", onStartPlayer));
+  server.addHandler(new AsyncCallbackJsonWebHandler("/api/player/volume", onChangeVolume));
+  server.on("/api/player/stop", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+              request->send(200);
+
+              delay(1000);
+              player.stop(); });
 
   server.begin();
 }
