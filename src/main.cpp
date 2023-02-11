@@ -350,7 +350,7 @@ void onStartPlayer(AsyncWebServerRequest *request, JsonVariant &json)
 
   if (data.containsKey("source"))
   {
-    const char *sourceUrl = data["source"].as<char *>();
+    const char *sourceUrl = data["source"].as<const char *>();
     const char *streamUrls[] = {sourceUrl};
     AudioSourceURL source(urlStream, streamUrls, "audio/mp3");
 
@@ -362,7 +362,7 @@ void onStartPlayer(AsyncWebServerRequest *request, JsonVariant &json)
 
   if (data.containsKey("volume"))
   {
-    const float volume = data["volume"].as<float>();
+    float volume = data["volume"].as<float>();
     player.setVolume(volume);
 
     isDirty = true;
@@ -385,7 +385,7 @@ void onChangeVolume(AsyncWebServerRequest *request, JsonVariant &json)
 
   if (data.containsKey("volume"))
   {
-    const float volume = data["volume"].as<float>();
+    float volume = data["volume"].as<float>();
     player.setVolume(volume);
 
     isDirty = true;
