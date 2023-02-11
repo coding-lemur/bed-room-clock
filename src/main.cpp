@@ -39,8 +39,9 @@ Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_
 DHT dht(DHT_PIN, DHT_TYPE);
 AsyncWebServer server(80);
 
-const char *ntpServer = "pool.ntp.org";              // TODO move to settings
-const char *timeZone = "CET-1CEST,M3.5.0,M10.5.0/3"; // TODO move to settings
+// TODO move to settings
+const char *ntpServer = "pool.ntp.org";
+const char *timeZone = "CET-1CEST,M3.5.0,M10.5.0/3";
 
 // TODO move to settings
 const char *externalBaseUrl = "https://coding-lemur.github.io";
@@ -49,11 +50,10 @@ const char *indexPath = "/bed-room-clock-dashboard/index.html";
 // TODO move to settings
 const char *streamUrls[] = {"http://www.radioeins.de/livemp3"};
 
-I2SStream i2s;
-MP3DecoderHelix decoder;
-// MP3DecoderMAD decoder;
 URLStream urlStream(DEFAULT_BUFFER_SIZE);
 AudioSourceURL source(urlStream, streamUrls, "audio/mp3");
+I2SStream i2s;
+MP3DecoderHelix decoder;
 AudioPlayer player(source, i2s, decoder);
 
 bool isPortalActive = false;
@@ -170,6 +170,7 @@ void loadSettings()
 {
   if (!SPIFFS.exists(SETTINGS_FILENAME))
   {
+    // TODO create settings-file with default values
     return;
   }
 
@@ -180,6 +181,7 @@ void loadSettings()
 
   if (error)
   {
+    // TODO maybe re-create settings-file
     Serial.println("error on deserializing 'auto-starts' file: ");
     return;
   }
@@ -561,7 +563,7 @@ void setupAudio()
 
   i2s.begin(config);
 
-  player.begin();
+  player.begin(0, false);
   player.setVolume(0.5);
 }
 
