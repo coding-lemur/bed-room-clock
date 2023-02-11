@@ -35,12 +35,12 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 
 ### Ultra Sonic Sensor (HC-SR04)
 
-| Pin on Sensor | description | Pin on ESP32 |
-| ------------- | ----------- | ------------ |
-| VCC           |             | VIN (5V)     |
-| TRIG          |             | GPIO 5       |
-| ECHO          |             | GPIO 18      |
-| GND           |             | GND          |
+| Pin on Sensor | Pin on ESP32 |
+| ------------- | ------------ |
+| VCC           | VIN (5V)     |
+| TRIG          | GPIO 5       |
+| ECHO          | GPIO 18      |
+| GND           | GND          |
 
 ### OLED Display (SSD1306 128x64) via SPI
 
@@ -56,12 +56,12 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 
 ### DHT22
 
-| Pin on Sensor | description | Pin on ESP32    |
-| ------------- | ----------- | --------------- |
-| 1             |             | 3V3 (3V)        |
-| 2             |             | GPIO 4 (analog) |
-| 3             |             | -               |
-| 4             |             | GND             |
+| Pin on Sensor  | Pin on ESP32    |
+| -------------  | --------------- |
+| 1              | 3V3 (3V)        |
+| 2              | GPIO 4 (analog) |
+| 3              | -               |
+| 4              | GND             |
 
 ## Timezone configuration
 
