@@ -170,7 +170,7 @@ void loadSettings()
 {
   if (!SPIFFS.exists(SETTINGS_FILENAME))
   {
-    // TODO create settings-file with default values
+    saveSettings();
     return;
   }
 
@@ -181,8 +181,8 @@ void loadSettings()
 
   if (error)
   {
-    // TODO maybe re-create settings-file
     Serial.println("error on deserializing 'auto-starts' file: ");
+    saveSettings();
     return;
   }
 
