@@ -63,6 +63,18 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 | 3              | -               |
 | 4              | GND             |
 
+### MAX 98357A (Audio Interface)
+
+| Pin on Sensor  | Pin on ESP32    |
+| -------------  | --------------- |
+| LRC            | GPIO 25         |
+| BCLK           | GPIO 26         |
+| DIN            | GPIO 22         |
+| GAIN           | -               |
+| SD             | -               |
+| GND            | GND             |
+| Vin            | Vin (5V)        |
+
 ## Timezone configuration
 
 First change variable `timeZone` to your timezone. See [timezone list](https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv) for the correct value.
