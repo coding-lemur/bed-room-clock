@@ -167,7 +167,7 @@ Payload
 | field            | type             | default | description                                                                                                   |
 | ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
 | source                                                                                | string | | URL of the MP3 streaming source
-| volume | number (between 0.0 and 1.0) |    | volume level |
+| volume | number (between 0 and 11) |    | volume level |
 
 #### Change Volume
 
@@ -179,7 +179,7 @@ Payload
 
 | field            | type             | default | description                                                                                                   |
 | ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| volume | number (between 0.0 and 1.0) |    | volume level |
+| volume | number (between 0 and 11) |    | volume level |
 
 #### Stop Stream
 

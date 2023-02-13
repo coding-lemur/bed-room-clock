@@ -26,8 +26,7 @@
 #include <ESPAsyncTunnel.h>
 #include <ESPmDNS.h>
 
-#include "AudioTools.h"
-#include "AudioCodecs/CodecMP3Helix.h"
+#include "Audio.h"
 
 #include "config.h"
 
@@ -49,11 +48,7 @@ const char *indexPath = "/bed-room-clock-dashboard/index.html";
 // TODO move to settings
 const char *streamUrls[] = {"http://www.radioeins.de/livemp3"};
 
-URLStream urlStream(DEFAULT_BUFFER_SIZE);
-AudioSourceURL source(urlStream, streamUrls, "audio/mp3");
-I2SStream i2s;
-MP3DecoderHelix decoder;
-AudioPlayer player(source, i2s, decoder);
+Audio audio;
 
 bool isPortalActive = false;
 float lastTemperature = -100;
@@ -222,6 +217,13 @@ void loadSettings()
   setBrightness();
 }
 
+void setVolume(uint8_t volume)
+{
+  volume = volume > 21 ? 21 : volume < 0 ? 0
+                                         : volume;
+  audio.setVolume(volume);
+}
+
 // TODO move to library
 String getDeviceId()
 {
@@ -350,19 +352,15 @@ void onStartPlayer(AsyncWebServerRequest *request, JsonVariant &json)
   if (data.containsKey("source"))
   {
     const char *sourceUrl = data["source"].as<const char *>();
-    const char *streamUrls[] = {sourceUrl};
-    AudioSourceURL source(urlStream, streamUrls, "audio/mp3");
-
-    player.setAudioSource(source);
-    player.play();
+    audio.connecttohost(sourceUrl);
 
     isDirty = true;
   }
 
   if (data.containsKey("volume"))
   {
-    float volume = data["volume"].as<float>();
-    player.setVolume(volume);
+    uint8_t volume = data["volume"].as<uint8_t>();
+    setVolume(volume);
 
     isDirty = true;
   }
@@ -384,8 +382,8 @@ void onChangeVolume(AsyncWebServerRequest *request, JsonVariant &json)
 
   if (data.containsKey("volume"))
   {
-    float volume = data["volume"].as<float>();
-    player.setVolume(volume);
+    uint8_t volume = data["volume"].as<uint8_t>();
+    setVolume(volume);
 
     isDirty = true;
   }
@@ -457,7 +455,7 @@ void setupWebserver()
               request->send(200);
 
               delay(1000);
-              player.stop(); });
+              audio.stopSong(); });
 
   server.begin();
 }
@@ -621,17 +619,8 @@ void setupWifiSettings()
 
 void setupAudio()
 {
-  auto config = i2s.defaultConfig(TX_MODE);
-  // you could define e.g your pins and change other settings
-  config.pin_ws = GPIO_NUM_25;   // => LRC
-  config.pin_bck = GPIO_NUM_26;  // => BCLK
-  config.pin_data = GPIO_NUM_22; // => DIN
-  // config.mode = I2S_STD_FORMAT;
-
-  i2s.begin(config);
-
-  player.begin(0, false);
-  player.setVolume(0.5);
+  audio.setPinout(GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_22);
+  audio.setVolume(11); // default 0...21
 }
 
 void setup()
@@ -688,6 +677,8 @@ void loop()
   uint8_t command = isDisplayOff ? SSD1306_DISPLAYOFF : SSD1306_DISPLAYON;
   ssd1306.ssd1306_command(command);
 
+  audio.loop();
+
   if (!isDisplayOff && shouldUpdateScreen)
   {
     struct tm timeinfo;
@@ -729,6 +720,4 @@ void loop()
 
     lastDisplayUpdate = millis();
   }
-
-  player.copy();
 }
