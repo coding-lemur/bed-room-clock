@@ -35,12 +35,12 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 
 ### Ultra Sonic Sensor (HC-SR04)
 
-| Pin on Sensor | description | Pin on ESP32 |
-| ------------- | ----------- | ------------ |
-| VCC           |             | VIN (5V)     |
-| TRIG          |             | GPIO 5       |
-| ECHO          |             | GPIO 18      |
-| GND           |             | GND          |
+| Pin on Sensor | Pin on ESP32 |
+| ------------- | ------------ |
+| VCC           | VIN (5V)     |
+| TRIG          | GPIO 5       |
+| ECHO          | GPIO 18      |
+| GND           | GND          |
 
 ### OLED Display (SSD1306 128x64) via SPI
 
@@ -56,12 +56,24 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 
 ### DHT22
 
-| Pin on Sensor | description | Pin on ESP32    |
-| ------------- | ----------- | --------------- |
-| 1             |             | 3V3 (3V)        |
-| 2             |             | GPIO 4 (analog) |
-| 3             |             | -               |
-| 4             |             | GND             |
+| Pin on Sensor  | Pin on ESP32    |
+| -------------  | --------------- |
+| 1              | 3V3 (3V)        |
+| 2              | GPIO 4 (analog) |
+| 3              | -               |
+| 4              | GND             |
+
+### MAX 98357A (Audio Interface)
+
+| Pin on Sensor  | Pin on ESP32    |
+| -------------  | --------------- |
+| LRC            | GPIO 25         |
+| BCLK           | GPIO 26         |
+| DIN            | GPIO 22         |
+| GAIN           | -               |
+| SD             | -               |
+| GND            | GND             |
+| Vin            | Vin (5V)        |
 
 ## Timezone configuration
 
@@ -71,7 +83,9 @@ Later I will include this setting also to the dashboard.
 
 ## REST API endpoint
 
-### Get info
+### General
+
+#### Get info
 
 ```http
 GET /api/info
@@ -101,7 +115,7 @@ Returning an JSON object with following data:
 }
 ```
 
-### Get settings
+#### Get settings
 
 ```http
 GET /api/settings
@@ -109,7 +123,7 @@ GET /api/settings
 
 Return the settings.json
 
-### Change settings
+#### Change settings
 
 ```http
 POST /api/settings
@@ -124,13 +138,13 @@ Send payload as JSON in body.
 | screenOnDistance | number (0 - 255) | 18 cm   | Specifies the distance from the ultrasonic sensor in centimeters from when the display should be switched on. |
 | screenOnInterval | number           | 8000 ms | Specifies the time in milliseconds that the display stays on after motion detection.                          |
 
-### Restart device
+#### Restart device
 
 ```http
 POST /api/restart
 ```
 
-### Factory reset
+#### Factory reset
 
 ```http
 POST /api/hard-reset
@@ -139,3 +153,36 @@ POST /api/hard-reset
 Reset device to factory settings.
 
 **Warning**: all files (~settings) will removed from the device. Need setup for connecting to your WiFi.
+
+### Audio-Player
+
+#### Start Stream
+
+```http
+POST /api/player/start
+```
+
+Payload
+
+| field            | type             | default | description                                                                                                   |
+| ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| source                                                                                | string | | URL of the MP3 streaming source
+| volume | number (between 0 and 11) |    | volume level |
+
+#### Change Volume
+
+```http
+POST /api/player/volume
+```
+
+Payload
+
+| field            | type             | default | description                                                                                                   |
+| ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| volume | number (between 0 and 11) |    | volume level |
+
+#### Stop Stream
+
+```http
+POST /api/player/stop
+```

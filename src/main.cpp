@@ -23,25 +23,32 @@
 #include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
 
-#include <AsyncElegantOTA.h>
 #include <ESPAsyncTunnel.h>
 #include <ESPmDNS.h>
 
+#include "Audio.h"
+
 #include "config.h"
 
-const String version = "1.4.1";
+const String version = "1.5.0";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 DHT dht(DHT_PIN, DHT_TYPE);
 AsyncWebServer server(80);
 
-const char *ntpServer = "pool.ntp.org";              // TODO move to settings
-const char *timeZone = "CET-1CEST,M3.5.0,M10.5.0/3"; // TODO move to settings
+// TODO move to settings
+const char *ntpServer = "pool.ntp.org";
+const char *timeZone = "CET-1CEST,M3.5.0,M10.5.0/3";
 
 // TODO move to settings
 const char *externalBaseUrl = "https://coding-lemur.github.io";
 const char *indexPath = "/bed-room-clock-dashboard/index.html";
+
+// TODO move to settings
+const char *streamUrls[] = {"http://www.radioeins.de/livemp3"};
+
+Audio audio;
 
 bool isPortalActive = false;
 float lastTemperature = -100;
@@ -157,6 +164,7 @@ void loadSettings()
 {
   if (!SPIFFS.exists(SETTINGS_FILENAME))
   {
+    saveSettings();
     return;
   }
 
@@ -168,6 +176,7 @@ void loadSettings()
   if (error)
   {
     Serial.println("error on deserializing 'auto-starts' file: ");
+    saveSettings();
     return;
   }
 
@@ -206,6 +215,13 @@ void loadSettings()
   }
 
   setBrightness();
+}
+
+void setVolume(uint8_t volume)
+{
+  volume = volume > 21 ? 21 : volume < 0 ? 0
+                                         : volume;
+  audio.setVolume(volume);
 }
 
 // TODO move to library
@@ -327,6 +343,60 @@ void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
   request->send(400); // bad request
 }
 
+void onStartPlayer(AsyncWebServerRequest *request, JsonVariant &json)
+{
+  StaticJsonDocument<200> data = json.as<JsonObject>();
+
+  bool isDirty = false;
+
+  if (data.containsKey("source"))
+  {
+    const char *sourceUrl = data["source"].as<const char *>();
+    audio.connecttohost(sourceUrl);
+
+    isDirty = true;
+  }
+
+  if (data.containsKey("volume"))
+  {
+    uint8_t volume = data["volume"].as<uint8_t>();
+    setVolume(volume);
+
+    isDirty = true;
+  }
+
+  if (isDirty)
+  {
+    request->send(200);
+    return;
+  }
+
+  request->send(400); // bad request
+}
+
+void onChangeVolume(AsyncWebServerRequest *request, JsonVariant &json)
+{
+  StaticJsonDocument<200> data = json.as<JsonObject>();
+
+  bool isDirty = false;
+
+  if (data.containsKey("volume"))
+  {
+    uint8_t volume = data["volume"].as<uint8_t>();
+    setVolume(volume);
+
+    isDirty = true;
+  }
+
+  if (isDirty)
+  {
+    request->send(200);
+    return;
+  }
+
+  request->send(400); // bad request
+}
+
 void setupWebserver()
 {
   // rewrites
@@ -377,7 +447,16 @@ void setupWebserver()
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
 
-  AsyncElegantOTA.begin(&server);
+  // player stuff
+  server.addHandler(new AsyncCallbackJsonWebHandler("/api/player/start", onStartPlayer));
+  server.addHandler(new AsyncCallbackJsonWebHandler("/api/player/volume", onChangeVolume));
+  server.on("/api/player/stop", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+              request->send(200);
+
+              delay(1000);
+              audio.stopSong(); });
+
   server.begin();
 }
 
@@ -538,6 +617,12 @@ void setupWifiSettings()
   WiFiSettings.connect();
 }
 
+void setupAudio()
+{
+  audio.setPinout(GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_22);
+  audio.setVolume(11); // default 0...21
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -549,13 +634,13 @@ void setup()
   loadSettings();
 
   setupDisplay();
-  setupMDns();
   setupWifiSettings();
   setupMDns();
   setupWebserver();
   setupOta();
   setupNtp();
   setupDht();
+  setupAudio();
 }
 
 void loop()
@@ -591,6 +676,8 @@ void loop()
   // turn on/off screen
   uint8_t command = isDisplayOff ? SSD1306_DISPLAYOFF : SSD1306_DISPLAYON;
   ssd1306.ssd1306_command(command);
+
+  audio.loop();
 
   if (!isDisplayOff && shouldUpdateScreen)
   {
