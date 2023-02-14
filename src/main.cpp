@@ -263,9 +263,9 @@ unsigned long getUnixTime()
   return now; // unix time
 }
 
-StaticJsonDocument<384> getInfoJson()
+StaticJsonDocument<512> getInfoJson()
 {
-  StaticJsonDocument<384> doc;
+  StaticJsonDocument<512> doc;
   doc["version"] = version;
 
   JsonObject systemPart = doc.createNestedObject("system");
@@ -285,6 +285,12 @@ StaticJsonDocument<384> getInfoJson()
   networkPart["wifiSsid"] = WiFi.SSID();
   networkPart["ip"] = WiFi.localIP().toString();
   networkPart["mac"] = WiFi.macAddress();
+
+  JsonObject playerPart = doc.createNestedObject("player");
+  playerPart["isPlaying"] = audio.isRunning();
+  playerPart["codec"] = audio.getCodecname();
+  playerPart["bitrate"] = audio.getBitRate();
+  playerPart["volume"] = audio.getVolume();
 
   JsonObject valuesPart = doc.createNestedObject("values");
 
@@ -630,6 +636,11 @@ void setupWifiSettings()
 void setupAudio()
 {
   audio.setPinout(GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_22);
+
+  uint16_t timeout_ms = 300;
+  uint16_t timeout_ms_ssl = 3000;
+  audio.setConnectionTimeout(timeout_ms, timeout_ms_ssl);
+
   audio.setVolume(11); // default 0...21
 }
 
