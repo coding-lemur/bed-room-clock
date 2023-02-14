@@ -26,6 +26,8 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 - SSD1306 (I use a 2.42 inch version)
 - HC-SR04
 - DHT22
+- MAX 98357A (audio module)
+- speaker
 
 ## Sketch
 
