@@ -345,10 +345,24 @@ void onStartPlayer(AsyncWebServerRequest *request, JsonVariant &json)
 
   bool isDirty = false;
 
+  if ((data.containsKey("source") && data.containsKey("file")) ||
+      (!data.containsKey("source") && !data.containsKey("file")))
+  {
+    request->send(400); // bad request
+    return;
+  }
+
   if (data.containsKey("source"))
   {
     const char *sourceUrl = data["source"].as<const char *>();
     audio.connecttohost(sourceUrl);
+
+    isDirty = true;
+  }
+  else if (data.containsKey("file"))
+  {
+    const char *filePath = data["file"].as<const char *>();
+    audio.connecttoFS(SPIFFS, filePath);
 
     isDirty = true;
   }
