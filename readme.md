@@ -95,27 +95,30 @@ GET /api/info
 
 Returning an JSON object with following data:
 
-```json
-{
-  "version": "1.1.0",
-  "system": {
-    "deviceId": "xxyyzzz",
-    "freeHeap": 236480,
-    "uptime": 300
-  },
-  "network": {
-    "wifiRssi": -59,
-    "wifiQuality": 82,
-    "wifiSsid": "wifi-name",
-    "ip": "192.168.178.70",
-    "mac": "C5:5F:4B:F0:64:29"
-  },
-  "values": {
-    "temp": 24.6,
-    "humidity": 42.7
-  }
-}
-```
+| field | type | description |
+| ------| -----| ------------|
+| version      | string     | firmware version number |
+| ------| -----| ------------|
+| system.deviceId      | string     | unique ID of the device |
+| system.freeHeap      | number    | the free heap in bytes |
+| system.uptime      | number    |  uptime since last restart of the device in seconds |
+| ------| -----| ------------|
+| fileSystem.totalBytes      | number    | total bytes of the FS |
+| fileSystem.usedBytes      | number    | used bytes of the FS |
+| ------| -----| ------------|
+| network.wifiRssi      | number    |   |
+| network.wifiQuality      | number    | quality of the WiFi connection in percent  |
+| network.wifiSsid      | string    | SSID of the current connected WiFi  |
+| network.ip      | string    | IP address of the device  |
+| network.mac      | string    | MAC address of the device  |
+| ------| -----| ------------|
+| values.temp      | number    | temperature in °C  |
+| values.humidity      | number    | humidity in percent  |
+| ------| -----| ------------|
+| player.isPlaying      | boolean    | TRUE: if a stream is currently playing  |
+| player.codec      | string    | name of the codec of the current stream (e.g. "MP3")  |
+| player.bitrate      | number    | bitrate of the current stream  |
+| player.volume      | number (0..21)    | volume of the current stream  |
 
 #### Get settings
 
@@ -168,7 +171,7 @@ Payload
 
 | field            | type             | default | description                                                                                                   |
 | ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| source                                                                                | string | | URL of the MP3 streaming source
+| source                                                                                | string | | URL of the streaming source (MP3, OGG, AAC, FLAC)
 | volume | number (between 0 and 11) |    | volume level |
 
 #### Change Volume
