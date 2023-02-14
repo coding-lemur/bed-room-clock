@@ -30,7 +30,7 @@
 
 #include "config.h"
 
-const String version = "1.5.0";
+const String version = "1.5.1";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
