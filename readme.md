@@ -1,6 +1,6 @@
 # Bedroom Clock with ESP32
 
-![final device](/docs/device.jpg)
+![final device](/docs/device.webp)
 
 ## Description
 
