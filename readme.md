@@ -77,6 +77,17 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 | GND            | GND             |
 | Vin            | Vin (5V)        |
 
+### SD Card Module
+
+| Pin on Sensor | description | Pin on ESP32 |
+| ------------- | ----------- | ------------ |
+| GND           |             | GND          |
+| VCC           |             | VIN (5V)     |
+| MISO          | SPI         | GPIO 12      |
+| MOSI/SDA      | SPI         | GPIO 13      |
+| SCK/SCL       | SPI         | GPIO 14      |
+| CS            | SPI         | GPIO 19      |
+
 ## Timezone configuration
 
 First change variable `timeZone` to your timezone. See [timezone list](https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv) for the correct value.
