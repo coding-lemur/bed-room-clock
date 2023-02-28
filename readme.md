@@ -83,13 +83,6 @@ First change variable `timeZone` to your timezone. See [timezone list](https://g
 
 Later I will include this setting also to the dashboard.
 
-## Roadmap
-
-- [ ] SD Card support (for storing audio files)
-- [ ] support of input button(s)
-- [ ] extend REST API to turn on the display
-- [ ] Move all settings to the dashboard
-
 ## REST API endpoint
 
 ### General
@@ -198,3 +191,10 @@ Payload
 ```http
 POST /api/player/stop
 ```
+
+## Roadmap
+
+- [ ] SD Card support (for storing audio files)
+- [ ] support of input button(s)
+- [ ] extend REST API to turn on the display
+- [ ] Move all settings to the dashboard
