@@ -1,4 +1,4 @@
-# Bedroom Clock with ESP32
+# Bedroom Clock with ESP32 ⏰
 
 ![final device](/docs/device.webp)
 
@@ -82,6 +82,13 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 First change variable `timeZone` to your timezone. See [timezone list](https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv) for the correct value.
 
 Later I will include this setting also to the dashboard.
+
+## Roadmap
+
+- [ ] SD Card support (for storing audio files)
+- [ ] support of input button(s)
+- [ ] extend REST API to turn on the display
+- [ ] Move all settings to the dashboard
 
 ## REST API endpoint
 
