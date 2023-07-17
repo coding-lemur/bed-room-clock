@@ -12,7 +12,7 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 - display turn on if you move your hand in front of it
 - temperature and humidity sensor
 - easy integration in own WiFi network (Hotspot settings-page)
-- [vuejs 3 dashboard](https://github.com/coding-lemur/bed-room-clock-dashboard)
+- [react dashboard](https://github.com/coding-lemur/bed-room-clock-dashboard)
 - REST API endpoint
 - OTA updates
 
