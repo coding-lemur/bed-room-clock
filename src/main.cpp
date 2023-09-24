@@ -54,7 +54,6 @@ float lastHumidity = -100;
 bool isTimeColonVisible = true;
 
 // settings
-byte brightness = 255;
 byte screenOnDistance = 18;                // in cm
 unsigned long screenOnInterval = 8 * 1000; // in ms
 
@@ -63,16 +62,9 @@ unsigned long lastDhtUpdate = 0;
 unsigned long lastDistanceUpdate = 0;
 unsigned long lastScreenOn = 0;
 
-void setBrightness()
-{
-  ssd1306.ssd1306_command(SSD1306_SETCONTRAST);
-  ssd1306.ssd1306_command(brightness); // 0-255
-}
-
 void saveSettings()
 {
   StaticJsonDocument<384> settings;
-  settings["brightness"] = brightness;
   settings["screenOnDistance"] = screenOnDistance;
   settings["screenOnInterval"] = screenOnInterval;
 
@@ -108,15 +100,6 @@ void loadSettings()
 
   bool hasMissingFields = false;
 
-  if (settings.containsKey("brightness"))
-  {
-    brightness = settings["brightness"].as<byte>();
-  }
-  else
-  {
-    hasMissingFields = true;
-  }
-
   if (settings.containsKey("screenOnDistance"))
   {
     screenOnDistance = settings["screenOnDistance"].as<byte>();
@@ -139,8 +122,6 @@ void loadSettings()
   {
     saveSettings();
   }
-
-  setBrightness();
 }
 
 void setVolume(uint8_t volume)
@@ -199,14 +180,6 @@ void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
   StaticJsonDocument<200> data = json.as<JsonObject>();
 
   bool isDirty = false;
-
-  if (data.containsKey("brightness"))
-  {
-    brightness = data["brightness"].as<byte>();
-    setBrightness();
-
-    isDirty = true;
-  }
 
   if (data.containsKey("screenOnDistance"))
   {

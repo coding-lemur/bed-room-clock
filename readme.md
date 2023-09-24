@@ -139,7 +139,6 @@ Send payload as JSON in body.
 
 | field            | type             | default | description                                                                                                   |
 | ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| brightness       | number (0 - 255) | 255     | The brightness of the display.                                                                                |
 | screenOnDistance | number (0 - 255) | 18 cm   | Specifies the distance from the ultrasonic sensor in centimeters from when the display should be switched on. |
 | screenOnInterval | number           | 8000 ms | Specifies the time in milliseconds that the display stays on after motion detection.                          |
 
