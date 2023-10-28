@@ -1,4 +1,4 @@
-# Bedroom Clock with ESP32
+# Bedroom Clock with ESP32 ⏰
 
 ![final device](/docs/device.webp)
 
@@ -12,7 +12,7 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 - display turn on if you move your hand in front of it
 - temperature and humidity sensor
 - easy integration in own WiFi network (Hotspot settings-page)
-- [vuejs 3 dashboard](https://github.com/coding-lemur/bed-room-clock-dashboard)
+- [react dashboard](https://github.com/coding-lemur/bed-room-clock-dashboard)
 - REST API endpoint
 - OTA updates
 
@@ -150,7 +150,6 @@ Send payload as JSON in body.
 
 | field            | type             | default | description                                                                                                   |
 | ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| brightness       | number (0 - 255) | 255     | The brightness of the display.                                                                                |
 | screenOnDistance | number (0 - 255) | 18 cm   | Specifies the distance from the ultrasonic sensor in centimeters from when the display should be switched on. |
 | screenOnInterval | number           | 8000 ms | Specifies the time in milliseconds that the display stays on after motion detection.                          |
 
@@ -202,3 +201,10 @@ Payload
 ```http
 POST /api/player/stop
 ```
+
+## Roadmap
+
+- [ ] SD Card support (for storing audio files)
+- [ ] support of input button(s)
+- [ ] extend REST API to turn on the display
+- [ ] Move all settings to the dashboard
