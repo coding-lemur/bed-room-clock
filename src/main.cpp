@@ -299,13 +299,18 @@ void setupWebserver()
   server.on("/api/settings", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, SETTINGS_FILENAME, "application/json", false); });
 
+  server.on("/api/display", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+              lastScreenOn = millis(); // turn on screen
+            });
+
   server.on("/api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
             {
-              request->send(200);
+    request->send(200);
 
-              SPIFFS.format();
-              delay(1000);
-              ESP.restart(); });
+    SPIFFS.format();
+    delay(1000);
+    ESP.restart(); });
 
   server.on("/api/restart", HTTP_POST, [](AsyncWebServerRequest *request)
             {

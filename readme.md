@@ -153,6 +153,14 @@ Send payload as JSON in body.
 | screenOnDistance | number (0 - 255) | 18 cm   | Specifies the distance from the ultrasonic sensor in centimeters from when the display should be switched on. |
 | screenOnInterval | number           | 8000 ms | Specifies the time in milliseconds that the display stays on after motion detection.                          |
 
+#### Turn on Screen
+
+```http
+POST /api/display
+```
+
+Turn on the display for the screenOnInterval time.
+
 #### Restart device
 
 ```http
@@ -207,5 +215,5 @@ POST /api/player/stop
 
 - [ ] SD Card support (for storing audio files)
 - [ ] support of input button(s)
-- [ ] extend REST API to turn on the display
+- [x] extend REST API to turn on the display
 - [ ] Move all settings to the dashboard
