@@ -82,11 +82,11 @@ You can put this device in your bedroom and you won't be disturbed by the light 
 | Pin on Sensor | description | Pin on ESP32 |
 | ------------- | ----------- | ------------ |
 | GND           |             | GND          |
-| VCC           |             | VIN (5V)     |
-| MISO          | SPI         | GPIO 12      |
-| MOSI/SDA      | SPI         | GPIO 13      |
-| SCK/SCL       | SPI         | GPIO 14      |
-| CS            | SPI         | GPIO 19      |
+| VCC           |             | 3V3 (3V)     |
+| MISO          | SPI         | GPIO 19      |
+| MOSI/SDA      | SPI         | GPIO 23      |
+| SCK/SCL       | SPI         | GPIO 18      |
+| CS            | SPI         | GPIO 5       |
 
 ## Timezone configuration
 
