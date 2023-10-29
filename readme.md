@@ -181,8 +181,9 @@ Payload
 
 | field            | type             | default | description                                                                                                   |
 | ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| source                                                                                | string | | URL of the streaming source (MP3, OGG, AAC, FLAC)
-| volume | number (between 0 and 11) |    | volume level |
+| source           | string           |         | URL of the streaming source (MP3, OGG, AAC, FLAC)                                                             |
+| file             | string           |         | path of the file on SD card                                                                                   |
+| volume           | number (between 0 and 11) |    | volume level                                                                                              |
 
 #### Change Volume
 

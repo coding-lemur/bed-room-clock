@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <SPIFFS.h>
+#include <SD.h>
 
 // sensors
 #include <NewPing.h>
@@ -32,7 +33,7 @@
 #include "tools.h"
 #include "config.h"
 
-const String version = "1.5.1";
+const String version = "1.5.2";
 
 NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
@@ -209,16 +210,25 @@ void onStartPlayer(AsyncWebServerRequest *request, JsonVariant &json)
 {
   StaticJsonDocument<200> data = json.as<JsonObject>();
 
-  bool isDirty = false;
+  bool hasContent = false;
 
   if (data.containsKey("source"))
   {
     const char *sourceUrl = data["source"].as<const char *>();
     audio.connecttohost(sourceUrl);
 
-    isDirty = true;
+    hasContent = true;
   }
-  else
+
+  if (data.containsKey("file"))
+  {
+    const char *file = data["file"].as<const char *>();
+    audio.connecttoFS(SD, file);
+
+    hasContent = true;
+  }
+
+  if (!hasContent)
   {
     request->send(400); // bad request
     return;
@@ -228,17 +238,9 @@ void onStartPlayer(AsyncWebServerRequest *request, JsonVariant &json)
   {
     uint8_t volume = data["volume"].as<uint8_t>();
     setVolume(volume);
-
-    isDirty = true;
   }
 
-  if (isDirty)
-  {
-    request->send(200);
-    return;
-  }
-
-  request->send(400); // bad request
+  request->send(200);
 }
 
 void onChangeVolume(AsyncWebServerRequest *request, JsonVariant &json)
@@ -319,10 +321,8 @@ void setupWebserver()
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/player/volume", onChangeVolume));
   server.on("/api/player/stop", HTTP_POST, [](AsyncWebServerRequest *request)
             {
-              request->send(200);
-
-              delay(1000);
-              audio.stopSong(); });
+              audio.stopSong(); 
+              request->send(200); });
 
   server.begin();
 }
