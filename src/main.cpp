@@ -302,7 +302,7 @@ void setupWebserver()
   server.on("/api/display", HTTP_POST, [](AsyncWebServerRequest *request)
             {
               lastScreenOn = millis(); // turn on screen
-            });
+              request->send(200); });
 
   server.on("/api/hard-reset", HTTP_POST, [](AsyncWebServerRequest *request)
             {
