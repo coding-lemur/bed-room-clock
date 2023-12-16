@@ -392,7 +392,7 @@ void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 
 void setupWifiSettings()
 {
-  WiFi.onEvent(WiFiStationDisconnected, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+  WiFi.onEvent(WiFiStationDisconnected, WiFiEvent_t::SYSTEM_EVENT_STA_DISCONNECTED);
 
   WiFiSettings.secure = true;
   WiFiSettings.hostname = "bedroom-"; // will auto add device ID
