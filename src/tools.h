@@ -42,3 +42,14 @@ unsigned long getUnixTime()
     time(&now);
     return now; // unix time
 }
+
+void loadFilesToArray(File root, JsonArray list)
+{
+    File file = root.openNextFile();
+
+    while (file)
+    {
+        list.add(file.name());
+        file = root.openNextFile();
+    }
+}

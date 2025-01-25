@@ -2,7 +2,7 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <SPIFFS.h>
-#include <SD.h>
+#include <WiFi.h>
 
 // sensors
 #include <NewPing.h>
@@ -27,8 +27,6 @@
 #include <ESPAsyncTunnel.h>
 #include <ESPmDNS.h>
 
-#include "Audio.h"
-
 #include "boot_logo.h"
 #include "tools.h"
 #include "config.h"
@@ -39,7 +37,6 @@ NewPing sonar(GPIO_NUM_5, GPIO_NUM_18);
 Adafruit_SSD1306 ssd1306(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 DHT dht(DHT_PIN, DHT_TYPE);
 AsyncWebServer server(80);
-Audio audio;
 
 // TODO move to settings
 const char *ntpServer = "pool.ntp.org";
@@ -125,13 +122,6 @@ void loadSettings()
   }
 }
 
-void setVolume(uint8_t volume)
-{
-  volume = volume > 21 ? 21 : volume < 0 ? 0
-                                         : volume;
-  audio.setVolume(volume);
-}
-
 StaticJsonDocument<512> getInfoJson()
 {
   StaticJsonDocument<512> doc;
@@ -155,11 +145,11 @@ StaticJsonDocument<512> getInfoJson()
   networkPart["ip"] = WiFi.localIP().toString();
   networkPart["mac"] = WiFi.macAddress();
 
-  JsonObject playerPart = doc.createNestedObject("player");
+  /*JsonObject playerPart = doc.createNestedObject("player");
   playerPart["isPlaying"] = audio.isRunning();
   playerPart["codec"] = audio.getCodecname();
   playerPart["bitrate"] = audio.getBitRate();
-  playerPart["volume"] = audio.getVolume();
+  playerPart["volume"] = audio.getVolume();*/
 
   JsonObject valuesPart = doc.createNestedObject("values");
 
@@ -185,80 +175,18 @@ void onChangeSettings(AsyncWebServerRequest *request, JsonVariant &json)
   if (data.containsKey("screenOnDistance"))
   {
     screenOnDistance = data["screenOnDistance"].as<byte>();
-
     isDirty = true;
   }
 
   if (data.containsKey("screenOnInterval"))
   {
     screenOnInterval = data["screenOnInterval"].as<unsigned long>();
-
     isDirty = true;
   }
 
   if (isDirty)
   {
     saveSettings();
-    request->send(200);
-    return;
-  }
-
-  request->send(400); // bad request
-}
-
-void onStartPlayer(AsyncWebServerRequest *request, JsonVariant &json)
-{
-  StaticJsonDocument<200> data = json.as<JsonObject>();
-
-  bool hasContent = false;
-
-  if (data.containsKey("source"))
-  {
-    const char *sourceUrl = data["source"].as<const char *>();
-    audio.connecttohost(sourceUrl);
-
-    hasContent = true;
-  }
-
-  if (data.containsKey("file"))
-  {
-    const char *file = data["file"].as<const char *>();
-    audio.connecttoFS(SD, file);
-
-    hasContent = true;
-  }
-
-  if (!hasContent)
-  {
-    request->send(400); // bad request
-    return;
-  }
-
-  if (data.containsKey("volume"))
-  {
-    uint8_t volume = data["volume"].as<uint8_t>();
-    setVolume(volume);
-  }
-
-  request->send(200);
-}
-
-void onChangeVolume(AsyncWebServerRequest *request, JsonVariant &json)
-{
-  StaticJsonDocument<200> data = json.as<JsonObject>();
-
-  bool isDirty = false;
-
-  if (data.containsKey("volume"))
-  {
-    uint8_t volume = data["volume"].as<uint8_t>();
-    setVolume(volume);
-
-    isDirty = true;
-  }
-
-  if (isDirty)
-  {
     request->send(200);
     return;
   }
@@ -320,14 +248,6 @@ void setupWebserver()
               ESP.restart(); });
 
   server.addHandler(new AsyncCallbackJsonWebHandler("/api/settings", onChangeSettings));
-
-  // player stuff
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/player/start", onStartPlayer));
-  server.addHandler(new AsyncCallbackJsonWebHandler("/api/player/volume", onChangeVolume));
-  server.on("/api/player/stop", HTTP_POST, [](AsyncWebServerRequest *request)
-            {
-              audio.stopSong(); 
-              request->send(200); });
 
   server.begin();
 }
@@ -392,7 +312,7 @@ void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 
 void setupWifiSettings()
 {
-  WiFi.onEvent(WiFiStationDisconnected, WiFiEvent_t::SYSTEM_EVENT_STA_DISCONNECTED);
+  WiFi.onEvent(WiFiStationDisconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
   WiFiSettings.secure = true;
   WiFiSettings.hostname = "bedroom-"; // will auto add device ID
@@ -479,17 +399,6 @@ void setupWifiSettings()
   WiFiSettings.connect();
 }
 
-void setupAudio()
-{
-  audio.setPinout(GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_22);
-
-  uint16_t timeout_ms = 300;
-  uint16_t timeout_ms_ssl = 3000;
-  audio.setConnectionTimeout(timeout_ms, timeout_ms_ssl);
-
-  audio.setVolume(11); // default 0...21
-}
-
 void setup()
 {
   Serial.begin(115200);
@@ -507,7 +416,6 @@ void setup()
   setupOta();
   configTzTime(timeZone, ntpServer);
   dht.begin();
-  setupAudio();
 }
 
 void loop()
@@ -543,8 +451,6 @@ void loop()
   // turn on/off screen
   uint8_t command = isDisplayOff ? SSD1306_DISPLAYOFF : SSD1306_DISPLAYON;
   ssd1306.ssd1306_command(command);
-
-  audio.loop();
 
   if (!isDisplayOff && shouldUpdateScreen)
   {
