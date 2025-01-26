@@ -126,10 +126,6 @@ Returning an JSON object with following data:
 | values.temp      | number    | temperature in °C  |
 | values.humidity      | number    | humidity in percent  |
 | ------| -----| ------------|
-| player.isPlaying      | boolean    | TRUE: if a stream is currently playing  |
-| player.codec      | string    | name of the codec of the current stream (e.g. "MP3")  |
-| player.bitrate      | number    | bitrate of the current stream  |
-| player.volume      | number (0..21)    | volume of the current stream  |
 
 #### Get settings
 
@@ -176,44 +172,3 @@ POST /api/hard-reset
 Reset device to factory settings.
 
 **Warning**: all files (~settings) will removed from the device. Need setup for connecting to your WiFi.
-
-### Audio-Player
-
-#### Start Stream
-
-```http
-POST /api/player/start
-```
-
-Payload
-
-| field            | type             | default | description                                                                                                   |
-| ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| source           | string           |         | URL of the streaming source (MP3, OGG, AAC, FLAC)                                                             |
-| file             | string           |         | path of the file on SD card                                                                                   |
-| volume           | number (between 0 and 11) |    | volume level                                                                                              |
-
-#### Change Volume
-
-```http
-POST /api/player/volume
-```
-
-Payload
-
-| field            | type             | default | description                                                                                                   |
-| ---------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| volume | number (between 0 and 11) |    | volume level |
-
-#### Stop Stream
-
-```http
-POST /api/player/stop
-```
-
-## Roadmap
-
-- [ ] SD Card support (for storing audio files)
-- [ ] support of input button(s)
-- [x] extend REST API to turn on the display
-- [ ] Move all settings to the dashboard
